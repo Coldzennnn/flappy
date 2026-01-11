@@ -1,0 +1,1376 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- Yandex Games SDK -->
+    <script src="https://yandex.ru/games/sdk/v2"></script>
+    <title>CyberCat Jetpack</title>
+    <style>
+        /* --- БАЗОВЫЕ НАСТРОЙКИ --- */
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(135deg, #1a0033 0%, #000000 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            font-family: 'Courier New', Courier, monospace;
+            
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            -webkit-touch-callout: none;
+            touch-action: none;
+        }
+
+        /* --- ИГРОВОЙ КОНТЕЙНЕР --- */
+        #game-wrapper {
+            position: relative;
+            width: 720px;
+            height: 1280px;
+            box-shadow: 0 0 100px rgba(0, 255, 255, 0.2);
+            overflow: hidden;
+            background-color: #000;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, #0d001a 0%, #000033 100%);
+        }
+
+        /* --- UI СЛОЙ --- */
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            z-index: 10;
+        }
+
+        /* --- ВЕРХНЯЯ ПАНЕЛЬ --- */
+        #top-bar {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 15px;
+            pointer-events: auto;
+            z-index: 100;
+        }
+
+        .icon-btn {
+            width: 50px;
+            height: 50px;
+            background: rgba(0, 20, 40, 0.8);
+            border: 2px solid #0ff;
+            color: #0ff;
+            font-size: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .icon-btn:active {
+            background: #0ff;
+            color: #000;
+            transform: scale(0.9);
+        }
+
+        .icon-btn.muted {
+            border-color: #ff0055;
+            color: #ff0055;
+            box-shadow: 0 0 10px rgba(255, 0, 85, 0.3);
+        }
+
+        /* Доп. стили для кнопки настроек на главном экране */
+        #btn-settings-open {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            pointer-events: auto;
+            z-index: 100;
+        }
+
+        /* --- ЭКРАНЫ --- */
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+            pointer-events: auto;
+            transition: opacity 0.3s;
+            z-index: 15;
+            gap: 30px; /* Глобальный отступ между элементами (кнопками, карточками, заголовками) */
+        }
+
+        .screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* --- КАРТОЧНАЯ СИСТЕМА --- */
+        .card {
+            background: rgba(0, 0, 0, 0.85);
+            border: 1px solid #0ff;
+            border-radius: 15px;
+            padding: 30px 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.15);
+            min-width: 60%;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        .card-red {
+            border-color: #ff0055;
+            box-shadow: 0 0 20px rgba(255, 0, 85, 0.15);
+        }
+
+        /* --- ТИПОГРАФИКА --- */
+        .game-title {
+            color: #0ff;
+            font-size: 8vh;
+            margin: 0 0 50px 0; /* Увеличенный отступ снизу */
+            text-shadow: 0 0 10px #0ff, 0 0 20px #0ff;
+            text-align: center;
+            line-height: 1;
+        }
+
+        .mission-failed {
+            color: #ff0055;
+            font-size: 5vh;
+            margin: 0 0 20px 0;
+            text-shadow: 0 0 10px #ff0055;
+            text-align: center;
+            font-weight: bold;
+            line-height: 1.1;
+        }
+
+        .label {
+            color: #aaa;
+            font-size: 1.8vh;
+            letter-spacing: 2px;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+
+        .val-text {
+            color: #0ff; 
+            font-size: 2vh; 
+            margin-top: 5px;
+        }
+
+        .score-big {
+            font-size: 8vh;
+            color: #fff;
+            font-weight: bold;
+            margin: 0 0 15px 0;
+            text-shadow: 0 0 10px rgba(255,255,255,0.5);
+            line-height: 1;
+        }
+
+        .best-score-container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 8px 15px;
+            border-radius: 20px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .best-label {
+            color: #0ff;
+            font-size: 2vh;
+            font-weight: bold;
+        }
+
+        .best-value {
+            color: #fff;
+            font-size: 2vh;
+        }
+
+        .title-paused {
+            color: #FFFF00;
+            text-shadow: 0 0 10px #FFFF00;
+            font-size: 6vh;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        /* --- КНОПКИ --- */
+        .btn {
+            background: rgba(0, 20, 40, 0.9);
+            border: 2px solid #0ff;
+            color: #0ff;
+            padding: 20px 50px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 3vh;
+            font-weight: bold;
+            text-transform: uppercase;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+            border-radius: 5px;
+            transition: all 0.2s;
+            min-width: 240px;
+            min-height: 70px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .btn:active {
+            background: #0ff;
+            color: #000;
+            box-shadow: 0 0 30px #0ff;
+            transform: scale(0.96);
+        }
+
+        .btn-restart {
+            border-color: #ff0055;
+            color: #ff0055;
+            box-shadow: 0 0 15px rgba(255, 0, 85, 0.3);
+        }
+        .btn-restart:active {
+            background: #ff0055;
+            color: #000;
+            box-shadow: 0 0 30px #ff0055;
+        }
+        
+        .btn-revive {
+            border-color: #00ff00;
+            color: #00ff00;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.3);
+            /* margin-bottom убран, используем gap контейнера */
+        }
+        .btn-revive:active {
+            background: #00ff00;
+            color: #000;
+            box-shadow: 0 0 30px #00ff00;
+        }
+
+        .btn-resume {
+            border-color: #FFFF00;
+            color: #FFFF00;
+            box-shadow: 0 0 15px rgba(255, 255, 0, 0.3);
+        }
+        .btn-resume:active {
+            background: #FFFF00;
+            color: #000;
+        }
+
+        /* --- НАСТРОЙКИ (ЯЗЫК) --- */
+        .lang-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .btn-lang {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #555;
+            background: rgba(0, 0, 0, 0.5);
+            color: #888;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 2vh;
+            transition: all 0.2s;
+        }
+
+        .btn-lang.active {
+            border-color: #0ff;
+            background: rgba(0, 255, 255, 0.2);
+            color: #0ff;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);
+        }
+
+        /* --- HUD --- */
+        #hud {
+            position: absolute;
+            top: 10%;
+            width: 100%;
+            text-align: center;
+            pointer-events: none;
+        }
+        #score-display {
+            font-size: 8vh;
+            color: rgba(255, 255, 255, 0.8);
+            font-weight: bold;
+            text-shadow: 0 0 10px #000;
+        }
+
+    </style>
+</head>
+<body>
+
+<div id="game-wrapper">
+    <canvas id="gameCanvas"></canvas>
+
+    <div id="ui-layer">
+        
+        <!-- Верхняя панель управления -->
+        <div id="top-bar">
+            <button id="btn-toggle-sound" class="icon-btn">🔊</button>
+            <button id="btn-toggle-pause" class="icon-btn" style="display: none;">⏸</button>
+        </div>
+
+        <!-- Кнопка настроек на стартовом экране (видна только в START) -->
+        <button id="btn-settings-open" class="icon-btn">⚙️</button>
+
+        <!-- HUD -->
+        <div id="hud" class="hidden">
+            <div id="score-display">0</div>
+        </div>
+
+        <!-- START SCREEN -->
+        <div id="start-screen" class="screen">
+            <h1 class="game-title" id="txt-title">CYBER<br>CAT</h1>
+            
+            <!-- CARD REMOVED FOR CLEANER LOOK -->
+            
+            <button class="btn" id="btn-start">START MISSION</button>
+            <div style="color: #aaa; font-size: 1.5vh; margin-top: -10px;" id="txt-tap">TAP TO JUMP</div>
+        </div>
+        
+        <!-- PAUSE SCREEN -->
+        <div id="pause-screen" class="screen hidden">
+            <h2 class="title-paused" id="txt-paused">SYSTEM<br>PAUSED</h2>
+            <button class="btn btn-resume" id="btn-resume">RESUME</button>
+        </div>
+
+        <!-- GAMEOVER SCREEN -->
+        <div id="gameover-screen" class="screen hidden">
+            <div class="card card-red">
+                <div class="mission-failed" id="txt-failed">MISSION<br>FAILED</div>
+                
+                <div class="label" id="txt-score-label">SCORE</div>
+                <div class="score-big" id="final-score">0</div>
+                
+                <div class="best-score-container">
+                    <span class="best-label" id="txt-best-label">BEST:</span>
+                    <span class="best-value" id="best-score">0</span>
+                </div>
+            </div>
+
+            <button class="btn btn-revive" id="btn-revive" style="display: none;">📺 REVIVE</button>
+            <button class="btn btn-restart" id="btn-restart">RETRY</button>
+        </div>
+
+        <!-- SETTINGS SCREEN -->
+        <div id="settings-screen" class="screen hidden">
+            <div class="card">
+                <div class="label" style="color:#fff; font-size:3vh; margin-bottom:20px;" id="txt-settings-title">SETTINGS</div>
+                
+                <div class="label" id="txt-lang-label">LANGUAGE</div>
+                <div class="lang-group">
+                    <button class="btn-lang" id="btn-lang-en">ENGLISH</button>
+                    <button class="btn-lang" id="btn-lang-ru">РУССКИЙ</button>
+                </div>
+            </div>
+            
+            <button class="btn" id="btn-settings-back">BACK</button>
+        </div>
+
+    </div>
+</div>
+
+<script>
+/**
+ * YANDEX SDK GLOBAL
+ */
+var ysdk = null;
+
+/**
+ * LOCALIZATION SYSTEM
+ */
+const TRANSLATIONS = {
+    'en': {
+        'title': 'CYBER<br>CAT',
+        'mission_label': 'MISSION PROTOCOL',
+        'mission_val': 'AVOID OBSTACLES',
+        'tap': 'TAP TO JUMP',
+        'start': 'START MISSION',
+        'paused': 'SYSTEM<br>PAUSED',
+        'resume': 'RESUME',
+        'failed': 'MISSION<br>FAILED',
+        'score_label': 'SCORE',
+        'best_label': 'BEST:',
+        'retry': 'RETRY',
+        'revive_btn': '📺 REVIVE',
+        'settings_title': 'SETTINGS',
+        'lang_label': 'LANGUAGE',
+        'back': 'BACK'
+    },
+    'ru': {
+        'title': 'КИБЕР<br>КОТ',
+        'mission_label': 'ЦЕЛЬ МИССИИ',
+        'mission_val': 'ИЗБЕГАЙ ПРЕПЯТСТВИЙ',
+        'tap': 'НАЖМИ ДЛЯ ПРЫЖКА',
+        'start': 'НАЧАТЬ',
+        'paused': 'СИСТЕМА<br>НА ПАУЗЕ',
+        'resume': 'ПРОДОЛЖИТЬ',
+        'failed': 'МИССИЯ<br>ПРОВАЛЕНА',
+        'score_label': 'СЧЕТ',
+        'best_label': 'РЕКОРД:',
+        'retry': 'ЗАНОВО',
+        'revive_btn': '📺 СПАСТИ КОТА',
+        'settings_title': 'НАСТРОЙКИ',
+        'lang_label': 'ЯЗЫК',
+        'back': 'НАЗАД'
+    }
+};
+
+class LanguageManager {
+    constructor() {
+        this.currentLang = 'en';
+        this.init();
+    }
+
+    init() {
+        // Priority 1: Yandex SDK Environment
+        if (window.ysdk && window.ysdk.environment && window.ysdk.environment.i18n) {
+            this.currentLang = window.ysdk.environment.i18n.lang;
+        } else {
+            // Priority 2: Navigator
+            const userLang = navigator.language || navigator.userLanguage; 
+            if (userLang) {
+                this.currentLang = userLang.substr(0, 2);
+            }
+        }
+
+        // Check if supported, otherwise map similar langs to RU, else EN
+        const isRu = ['ru', 'be', 'kk', 'uk', 'uz'].some(code => this.currentLang === code);
+        this.currentLang = isRu ? 'ru' : 'en';
+
+        this.updateTexts();
+    }
+
+    setLanguage(lang) {
+        if (TRANSLATIONS[lang]) {
+            this.currentLang = lang;
+            this.updateTexts();
+            this.updateButtons();
+        }
+    }
+
+    updateButtons() {
+        const btnEn = document.getElementById('btn-lang-en');
+        const btnRu = document.getElementById('btn-lang-ru');
+        
+        if (this.currentLang === 'en') {
+            btnEn.classList.add('active');
+            btnRu.classList.remove('active');
+        } else {
+            btnEn.classList.remove('active');
+            btnRu.classList.add('active');
+        }
+    }
+
+    updateTexts() {
+        const t = TRANSLATIONS[this.currentLang];
+        
+        const setText = (id, text) => {
+            const el = document.getElementById(id);
+            if (el) el.innerHTML = text;
+        };
+
+        setText('txt-title', t.title);
+        setText('txt-mission-label', t.mission_label);
+        setText('txt-mission-val', t.mission_val);
+        setText('txt-tap', t.tap);
+        setText('btn-start', t.start);
+        setText('txt-paused', t.paused);
+        setText('btn-resume', t.resume);
+        setText('txt-failed', t.failed);
+        setText('txt-score-label', t.score_label);
+        setText('txt-best-label', t.best_label);
+        setText('btn-restart', t.retry);
+        setText('btn-revive', t.revive_btn);
+        setText('txt-settings-title', t.settings_title);
+        setText('txt-lang-label', t.lang_label);
+        setText('btn-settings-back', t.back);
+    }
+}
+
+/**
+ * AUDIO SYSTEM
+ */
+class SoundManager {
+    constructor() {
+        this.ctx = null;
+        this.muted = false;
+        this.initialized = false;
+    }
+
+    init() {
+        if (this.initialized) return;
+        try {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            this.ctx = new AudioContext();
+            this.initialized = true;
+        } catch (e) {
+            console.error('Web Audio API not supported');
+        }
+    }
+
+    toggleMute() {
+        this.muted = !this.muted;
+        return this.muted;
+    }
+
+    // New helper to suspend audio during ads without changing user preference
+    suspendAudio() {
+        if (this.ctx && this.ctx.state === 'running') {
+            this.ctx.suspend();
+        }
+    }
+
+    // New helper to resume audio after ads
+    resumeAudio() {
+        if (this.ctx && this.ctx.state === 'suspended' && !this.muted) {
+            this.ctx.resume();
+        }
+    }
+
+    playJump() {
+        if (this.muted || !this.ctx) return;
+        if (this.ctx.state === 'suspended') this.ctx.resume();
+
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(150, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(300, this.ctx.currentTime + 0.1);
+
+        gain.gain.setValueAtTime(0.05, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.1);
+
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.1);
+    }
+
+    playScore() {
+        if (this.muted || !this.ctx) return;
+        
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(800, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(1500, this.ctx.currentTime + 0.1);
+
+        gain.gain.setValueAtTime(0.05, this.ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.0, this.ctx.currentTime + 0.1);
+
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.1);
+    }
+
+    playCrash() {
+        if (this.muted || !this.ctx) return;
+        
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(100, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(10, this.ctx.currentTime + 0.3);
+
+        gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.3);
+
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.3);
+    }
+}
+
+/**
+ * КОНФИГУРАЦИЯ
+ * Добавлены параметры для прогрессивной сложности
+ */
+const CONFIG = {
+    targetRatio: 9 / 16,
+    logicalWidth: 720,
+    logicalHeight: 1280,
+    
+    // Physics (px/sec)
+    gravity: 1900,        
+    jumpForce: -620,       
+    terminalVelocity: 1000,
+    
+    // Difficulty
+    initialSpeed: 350,
+    speed: 350,          // Current Speed
+    speedIncreaseStep: 1.5,
+    maxSpeed: 600,
+    
+    // Balancing
+    gapSize: 220, 
+    minPipeDistance: 480
+};
+
+const STATE = {
+    START: 0,
+    PLAYING: 1,
+    PAUSED: 2,
+    GAMEOVER: 3,
+    SETTINGS: 4
+};
+
+/**
+ * КЛАСС ИГРЫ
+ */
+class Game {
+    constructor() {
+        this.canvas = document.getElementById('gameCanvas');
+        this.ctx = this.canvas.getContext('2d');
+        this.wrapper = document.getElementById('game-wrapper');
+
+        this.canvas.width = CONFIG.logicalWidth;
+        this.canvas.height = CONFIG.logicalHeight;
+
+        this.ui = {
+            start: document.getElementById('start-screen'),
+            gameover: document.getElementById('gameover-screen'),
+            pause: document.getElementById('pause-screen'),
+            settings: document.getElementById('settings-screen'),
+            hud: document.getElementById('hud'),
+            score: document.getElementById('score-display'),
+            finalScore: document.getElementById('final-score'),
+            bestScore: document.getElementById('best-score'),
+            btnStart: document.getElementById('btn-start'),
+            btnRestart: document.getElementById('btn-restart'),
+            btnRevive: document.getElementById('btn-revive'),
+            btnResume: document.getElementById('btn-resume'),
+            btnPause: document.getElementById('btn-toggle-pause'),
+            btnSound: document.getElementById('btn-toggle-sound'),
+            btnSettingsOpen: document.getElementById('btn-settings-open'),
+            btnSettingsBack: document.getElementById('btn-settings-back'),
+            btnLangEn: document.getElementById('btn-lang-en'),
+            btnLangRu: document.getElementById('btn-lang-ru')
+        };
+
+        this.langManager = new LanguageManager();
+        this.langManager.updateButtons();
+
+        this.sound = new SoundManager();
+        this.state = STATE.START;
+        
+        this.lastTime = 0;
+        this.score = 0;
+        this.highScore = localStorage.getItem('cybercat_highscore') || 0;
+        this.hasRevived = false;
+
+        this.cat = new Cat(this);
+        this.obstacles = [];
+        this.particles = [];
+        this.background = new Background(this);
+
+        this.initListeners();
+        this.resize();
+        
+        requestAnimationFrame((t) => this.loop(t));
+    }
+
+    initListeners() {
+        window.addEventListener('resize', () => this.resize());
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden && this.state === STATE.PLAYING) {
+                this.togglePause();
+            }
+        });
+
+        const startAction = (e) => {
+            e.preventDefault();
+            this.sound.init();
+            this.startGame();
+        };
+        this.ui.btnStart.addEventListener('click', startAction);
+        
+        // RESTART (Interstitial)
+        this.ui.btnRestart.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.showAdAndRestart();
+        });
+
+        // REVIVE (Rewarded)
+        this.ui.btnRevive.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.showReviveAd();
+        });
+
+        this.ui.btnResume.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.togglePause();
+        });
+
+        this.ui.btnPause.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.togglePause();
+        });
+
+        this.ui.btnSound.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isMuted = this.sound.toggleMute();
+            this.ui.btnSound.innerText = isMuted ? '🔇' : '🔊';
+            this.ui.btnSound.classList.toggle('muted', isMuted);
+        });
+
+        // SETTINGS LISTENERS
+        this.ui.btnSettingsOpen.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.openSettings();
+        });
+
+        this.ui.btnSettingsBack.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.closeSettings();
+        });
+
+        this.ui.btnLangEn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.langManager.setLanguage('en');
+        });
+
+        this.ui.btnLangRu.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.langManager.setLanguage('ru');
+        });
+
+
+        this.wrapper.addEventListener('pointerdown', (e) => {
+            if (e.target.tagName === 'BUTTON') return;
+            if (this.state === STATE.PLAYING) {
+                this.cat.jump();
+            }
+        });
+
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' || e.code === 'ArrowUp') {
+                if (this.state === STATE.PLAYING) this.cat.jump();
+            }
+            if (e.code === 'Escape') {
+                if (this.state === STATE.PLAYING || this.state === STATE.PAUSED) {
+                    this.togglePause();
+                }
+            }
+        });
+    }
+
+    resize() {
+        const windowWidth = window.innerWidth;
+        const windowHeight = window.innerHeight;
+        const windowRatio = windowWidth / windowHeight;
+
+        let finalWidth, finalHeight;
+
+        if (windowRatio < CONFIG.targetRatio) {
+            finalWidth = windowWidth;
+            finalHeight = windowWidth / CONFIG.targetRatio;
+        } else {
+            finalHeight = windowHeight;
+            finalWidth = windowHeight * CONFIG.targetRatio;
+        }
+
+        this.wrapper.style.width = `${finalWidth}px`;
+        this.wrapper.style.height = `${finalHeight}px`;
+    }
+
+    openSettings() {
+        if (this.state === STATE.START) {
+            this.previousState = STATE.START;
+            this.state = STATE.SETTINGS;
+            this.ui.start.classList.add('hidden');
+            this.ui.settings.classList.remove('hidden');
+            this.ui.btnSettingsOpen.style.display = 'none';
+        }
+    }
+
+    closeSettings() {
+        if (this.state === STATE.SETTINGS) {
+            this.state = this.previousState;
+            this.ui.settings.classList.add('hidden');
+            this.ui.start.classList.remove('hidden');
+            this.ui.btnSettingsOpen.style.display = 'block';
+        }
+    }
+
+    startGame() {
+        this.state = STATE.PLAYING;
+        this.ui.start.classList.add('hidden');
+        this.ui.settings.classList.add('hidden');
+        this.ui.hud.classList.remove('hidden');
+        this.ui.btnPause.style.display = 'flex';
+        this.ui.btnSettingsOpen.style.display = 'none';
+        
+        // Сброс скорости перед стартом
+        CONFIG.speed = CONFIG.initialSpeed;
+        this.hasRevived = false;
+        
+        this.cat.reset(); 
+        this.cat.jump();
+        this.score = 0;
+        this.updateScoreUI();
+        this.lastTime = performance.now();
+    }
+
+    // INTERSTITIAL AD LOGIC
+    showAdAndRestart() {
+        const finishAd = () => {
+            this.sound.resumeAudio();
+            this.resetGame();
+        };
+
+        if (window.ysdk) {
+            this.sound.suspendAudio();
+            
+            window.ysdk.adv.showFullscreenAdv({
+                callbacks: {
+                    onClose: function(wasShown) {
+                        finishAd();
+                    },
+                    onError: function(error) {
+                        finishAd();
+                    }
+                }
+            });
+        } else {
+            finishAd();
+        }
+    }
+
+    // REWARDED VIDEO (REVIVE) LOGIC
+    showReviveAd() {
+        let rewardGranted = false;
+        
+        const finishRevive = () => {
+            this.sound.resumeAudio();
+            if (rewardGranted) {
+                this.reviveHero();
+            }
+        };
+
+        if (window.ysdk) {
+            this.sound.suspendAudio();
+            
+            window.ysdk.adv.showRewardedVideo({
+                callbacks: {
+                    onOpen: () => {
+                        console.log('Video ad open.');
+                    },
+                    onRewarded: () => {
+                        console.log('Rewarded!');
+                        rewardGranted = true;
+                    },
+                    onClose: () => {
+                        console.log('Video ad closed.');
+                        finishRevive();
+                    },
+                    onError: (e) => {
+                        console.log('Error while open video ad:', e);
+                        finishRevive();
+                    }
+                }
+            });
+        } else {
+            // Заглушка (Mock) для рекламы
+            console.log('Test Ad Watched');
+            rewardGranted = true; 
+            finishRevive();
+        }
+    }
+
+    reviveHero() {
+        this.hasRevived = true;
+        this.state = STATE.PLAYING;
+        
+        // Hide Game Over
+        this.ui.gameover.classList.add('hidden');
+        this.ui.hud.classList.remove('hidden');
+        this.ui.btnPause.style.display = 'flex';
+
+        // Reset Cat Position & Velocity
+        this.cat.y = this.canvas.height / 2;
+        this.cat.velocity = 0;
+        this.cat.rotation = 0;
+
+        // Clear Obstacles for safety
+        this.obstacles = [];
+
+        this.lastTime = performance.now();
+        this.cat.jump();
+    }
+
+    resetGame() {
+        this.cat = new Cat(this);
+        this.obstacles = [];
+        this.particles = [];
+        this.score = 0;
+        this.hasRevived = false;
+        
+        // Сброс скорости
+        CONFIG.speed = CONFIG.initialSpeed;
+        
+        this.state = STATE.PLAYING;
+        this.ui.gameover.classList.add('hidden');
+        this.ui.hud.classList.remove('hidden');
+        this.ui.btnPause.style.display = 'flex';
+        this.cat.jump();
+        this.updateScoreUI();
+        this.lastTime = performance.now();
+    }
+
+    togglePause() {
+        if (this.state === STATE.PLAYING) {
+            this.state = STATE.PAUSED;
+            this.ui.pause.classList.remove('hidden');
+            this.ui.btnPause.style.display = 'none';
+        } else if (this.state === STATE.PAUSED) {
+            this.state = STATE.PLAYING;
+            this.ui.pause.classList.add('hidden');
+            this.ui.btnPause.style.display = 'flex';
+            this.lastTime = performance.now();
+        }
+    }
+
+    gameOver() {
+        this.state = STATE.GAMEOVER;
+        this.sound.playCrash();
+        
+        if (this.score > this.highScore) {
+            this.highScore = this.score;
+            localStorage.setItem('cybercat_highscore', this.highScore);
+        }
+
+        this.ui.hud.classList.add('hidden');
+        this.ui.btnPause.style.display = 'none';
+        this.ui.gameover.classList.remove('hidden');
+        this.ui.finalScore.innerText = this.score;
+        this.ui.bestScore.innerText = this.highScore;
+
+        // Show Revive button only if available and not used
+        if (!this.hasRevived) {
+            this.ui.btnRevive.style.display = 'flex';
+        } else {
+            this.ui.btnRevive.style.display = 'none';
+        }
+    }
+
+    updateScoreUI() {
+        this.ui.score.innerText = this.score;
+    }
+
+    loop(timestamp) {
+        if (!this.lastTime) this.lastTime = timestamp;
+        const dt = (timestamp - this.lastTime) / 1000;
+        this.lastTime = timestamp;
+
+        this.update(dt);
+        this.draw();
+        
+        requestAnimationFrame((t) => this.loop(t));
+    }
+
+    update(dt) {
+        if (this.state === STATE.PAUSED || this.state === STATE.SETTINGS) return;
+        if (dt > 0.1) dt = 0.1;
+
+        this.background.update(dt);
+
+        for (let i = this.particles.length - 1; i >= 0; i--) {
+            this.particles[i].update(dt);
+            if (this.particles[i].life <= 0) {
+                this.particles.splice(i, 1);
+            }
+        }
+
+        if (this.state === STATE.PLAYING) {
+            this.cat.update(dt);
+            
+            // --- ЛОГИКА СПАВНА ПО ДИСТАНЦИИ (АДАПТИВНАЯ) ---
+            
+            // Чем выше скорость, тем меньше дистанция (чтобы сохранить ритм)
+            // При 350px/s -> 400px. При 700px/s -> 300px.
+            const speedRatio = (CONFIG.speed - CONFIG.initialSpeed) / (CONFIG.maxSpeed - CONFIG.initialSpeed);
+            // Линейная интерполяция уменьшения дистанции:
+            // 400 - (ratio * 100). Макс уменьшение на 100px.
+            const dynamicMinDistance = CONFIG.minPipeDistance - (speedRatio * 50);
+
+            if (this.obstacles.length === 0) {
+                this.obstacles.push(new Obstacle(this));
+            } else {
+                const lastObs = this.obstacles[this.obstacles.length - 1];
+                if (CONFIG.logicalWidth - lastObs.x >= dynamicMinDistance) {
+                    this.obstacles.push(new Obstacle(this));
+                }
+            }
+
+            const hitPaddingX = this.cat.w * 0.2;
+            const hitPaddingY = this.cat.h * 0.2;
+            
+            const catHitL = this.cat.x + hitPaddingX;
+            const catHitR = this.cat.x + this.cat.w - hitPaddingX;
+            const catHitT = this.cat.y + hitPaddingY;
+            const catHitB = this.cat.y + this.cat.h - hitPaddingY;
+
+            for (let i = this.obstacles.length - 1; i >= 0; i--) {
+                const obs = this.obstacles[i];
+                obs.update(dt);
+                
+                if (!obs.passed && this.cat.x > obs.x + obs.w) {
+                    obs.passed = true;
+                    this.score++;
+                    this.updateScoreUI();
+                    this.sound.playScore();
+                    
+                    // --- ПРОГРЕССИВНАЯ СЛОЖНОСТЬ ---
+                    // Увеличиваем скорость
+                    CONFIG.speed = Math.min(CONFIG.maxSpeed, CONFIG.speed + CONFIG.speedIncreaseStep);
+                }
+
+                if (obs.x + obs.w < 0) {
+                    this.obstacles.splice(i, 1);
+                    continue;
+                }
+
+                if (
+                    catHitR > obs.x &&
+                    catHitL < obs.x + obs.w &&
+                    (catHitT < obs.topHeight || catHitB > obs.bottomY)
+                ) {
+                    this.gameOver();
+                }
+            }
+
+            if (this.cat.y + this.cat.h >= this.canvas.height || this.cat.y <= 0) {
+                this.gameOver();
+            }
+
+        } else if (this.state === STATE.GAMEOVER) {
+            if (this.cat.y + this.cat.h < this.canvas.height) {
+                this.cat.velocity += CONFIG.gravity * dt;
+                this.cat.y += this.cat.velocity * dt;
+            }
+        }
+    }
+
+    draw() {
+        this.ctx.fillStyle = "#0d001a";
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+        this.background.draw(this.ctx);
+        this.obstacles.forEach(obs => obs.draw(this.ctx));
+        this.particles.forEach(p => p.draw(this.ctx));
+        this.cat.draw(this.ctx);
+
+        if (this.state === STATE.PAUSED || this.state === STATE.SETTINGS) {
+            this.ctx.fillStyle = "rgba(0,0,0,0.3)";
+            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        }
+    }
+}
+
+/* --- СУЩНОСТИ --- */
+
+class Cat {
+    constructor(game) {
+        this.game = game;
+        this.w = 50;
+        this.h = 40;
+        this.reset();
+    }
+
+    reset() {
+        this.x = this.game.canvas.width / 2 - 100;
+        this.y = this.game.canvas.height / 2;
+        this.velocity = 0;
+        this.rotation = 0;
+        this.timer = 0;
+    }
+
+    jump() {
+        this.velocity = CONFIG.jumpForce;
+        this.rotation = -20; 
+        
+        this.game.sound.playJump();
+        for(let i=0; i<5; i++) {
+            this.game.particles.push(new Particle(this.x, this.y + this.h/2));
+        }
+    }
+
+    update(dt) {
+        this.velocity += CONFIG.gravity * dt;
+        
+        if (this.velocity > CONFIG.terminalVelocity) {
+            this.velocity = CONFIG.terminalVelocity;
+        }
+
+        this.y += this.velocity * dt;
+
+        if (this.velocity < 0) {
+            this.rotation = Math.max(-20, this.rotation - 600 * dt);
+        } else {
+            this.rotation = Math.min(45, this.rotation + 200 * dt);
+        }
+
+        this.timer += dt;
+        if (this.timer > 0.05) { 
+            this.game.particles.push(new Particle(this.x, this.y + this.h/2 + 5));
+            this.timer = 0;
+        }
+    }
+
+    draw(ctx) {
+        ctx.save();
+        ctx.translate(this.x + this.w/2, this.y + this.h/2);
+        ctx.rotate(this.rotation * Math.PI / 180);
+
+        if (this.velocity < 0) {
+            const flameLength = 20 + Math.random() * 15;
+            
+            // Визуализация Форсажа: Если скорость > 500, пламя становится синим
+            let flameColor;
+            if (CONFIG.speed > 500) {
+                 // Плазменное синее пламя
+                 flameColor = Math.random() > 0.5 ? "#00FFFF" : "#FFFFFF"; 
+            } else {
+                 // Обычное оранжевое пламя
+                 flameColor = Math.random() > 0.5 ? "#FFFF00" : "#FF5500";
+            }
+            
+            ctx.fillStyle = flameColor;
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = flameColor;
+            
+            ctx.beginPath();
+            ctx.moveTo(-this.w/2 - 10, -5); 
+            ctx.lineTo(-this.w/2 - 10 - flameLength, 5);
+            ctx.lineTo(-this.w/2 - 10, 15);
+            ctx.fill();
+            ctx.shadowBlur = 0; 
+        }
+
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = "#0ff";
+
+        ctx.fillStyle = "#000";
+        ctx.strokeStyle = "#0ff";
+        ctx.lineWidth = 3;
+        ctx.fillRect(-this.w/2, -this.h/2, this.w, this.h);
+        ctx.strokeRect(-this.w/2, -this.h/2, this.w, this.h);
+
+        ctx.fillStyle = "#555";
+        ctx.fillRect(-this.w/2 - 10, -5, 10, 20);
+
+        ctx.fillStyle = "#fff";
+        ctx.fillRect(8, -12, 8, 8);
+        
+        ctx.fillStyle = "rgba(255, 0, 85, 0.7)"; 
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = "#ff0055";
+        ctx.fillRect(5, -14, 25, 12);
+
+        ctx.strokeStyle = "#0ff";
+        ctx.lineWidth = 2;
+        ctx.shadowBlur = 0;
+        
+        ctx.beginPath();
+        ctx.moveTo(-10, -this.h/2);
+        ctx.lineTo(-20, -this.h/2 - 15);
+        ctx.lineTo(0, -this.h/2);
+        ctx.stroke();
+        
+        ctx.beginPath();
+        ctx.moveTo(5, -this.h/2);
+        ctx.lineTo(15, -this.h/2 - 15);
+        ctx.lineTo(25, -this.h/2);
+        ctx.stroke();
+
+        ctx.restore();
+    }
+}
+
+class Obstacle {
+    constructor(game) {
+        this.game = game;
+        this.w = 70;
+        this.x = game.canvas.width;
+        this.passed = false;
+        const minHeight = 150;
+        const maxTop = game.canvas.height - CONFIG.gapSize - minHeight;
+        this.topHeight = Math.floor(Math.random() * (maxTop - minHeight + 1) + minHeight);
+        this.bottomY = this.topHeight + CONFIG.gapSize;
+    }
+    
+    update(dt) { 
+        this.x -= CONFIG.speed * dt; 
+    }
+    
+    draw(ctx) {
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = "#0f0";
+        ctx.fillStyle = "#001a00";
+        ctx.strokeStyle = "#0f0";
+        ctx.lineWidth = 4;
+        ctx.fillRect(this.x, 0, this.w, this.topHeight);
+        ctx.strokeRect(this.x, -5, this.w, this.topHeight + 5);
+        ctx.fillStyle = "#0f0";
+        ctx.fillRect(this.x + 10, this.topHeight - 40, this.w - 20, 10);
+        ctx.fillStyle = "#001a00";
+        ctx.fillRect(this.x, this.bottomY, this.w, this.game.canvas.height - this.bottomY);
+        ctx.strokeRect(this.x, this.bottomY, this.w, this.game.canvas.height - this.bottomY + 5);
+        ctx.fillStyle = "#0f0";
+        ctx.fillRect(this.x + 10, this.bottomY + 30, this.w - 20, 10);
+        ctx.shadowBlur = 0;
+    }
+}
+
+class Particle {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.vx = (Math.random() - 0.5) * 300 - 300; 
+        this.vy = (Math.random() - 0.5) * 300;
+        this.life = 1.0;
+        this.color = Math.random() > 0.5 ? "#ff0055" : "#00ffff";
+        this.size = Math.random() * 8 + 4;
+    }
+    
+    update(dt) {
+        this.x += this.vx * dt;
+        this.y += this.vy * dt;
+        this.life -= 2.5 * dt; 
+        this.size *= (1 - 2 * dt); 
+    }
+    
+    draw(ctx) {
+        ctx.globalAlpha = Math.max(0, this.life);
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.rect(this.x, this.y, this.size, this.size);
+        ctx.fill();
+        ctx.globalAlpha = 1.0;
+    }
+}
+
+class Background {
+    constructor(game) {
+        this.game = game;
+        this.bgX = 0;
+        this.buildings = [];
+        for(let i=0; i<20; i++) {
+            this.buildings.push({
+                x: i * 80,
+                w: 60 + Math.random() * 40,
+                h: 200 + Math.random() * 600,
+                color: `rgba(20, 0, 50, ${0.3 + Math.random() * 0.4})`
+            });
+        }
+    }
+    
+    update(dt) {
+        if (this.game.state === STATE.PLAYING) {
+            this.bgX -= (CONFIG.speed * 0.1) * dt; 
+            if (this.bgX <= -CONFIG.logicalWidth) this.bgX = 0;
+        }
+    }
+    
+    draw(ctx) {
+        ctx.strokeStyle = "rgba(100, 0, 255, 0.1)";
+        ctx.lineWidth = 2;
+        const gridSize = 80;
+        const offset = this.bgX % gridSize;
+        for (let x = offset; x < CONFIG.logicalWidth; x += gridSize) {
+            ctx.beginPath();
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, CONFIG.logicalHeight);
+            ctx.stroke();
+        }
+        for (let y = 0; y < CONFIG.logicalHeight; y += gridSize) {
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(CONFIG.logicalWidth, y);
+            ctx.stroke();
+        }
+        ctx.save();
+        ctx.translate(this.bgX, 0);
+        for(let j=0; j<2; j++) {
+            const shift = j * 1600;
+            this.buildings.forEach(b => {
+                ctx.fillStyle = b.color;
+                ctx.fillRect(b.x + shift, CONFIG.logicalHeight - b.h, b.w, b.h);
+                ctx.fillStyle = "rgba(0, 255, 255, 0.2)";
+                for(let wy = CONFIG.logicalHeight - b.h + 20; wy < CONFIG.logicalHeight; wy += 40) {
+                      if(Math.random() > 0.3) ctx.fillRect(b.x + shift + 10, wy, b.w - 20, 20);
+                }
+            });
+        }
+        ctx.restore();
+    }
+}
+
+/**
+ * INITIALIZATION
+ */
+let gameInstance = null;
+
+function initYandex() {
+    YaGames.init().then(ysdk_instance => {
+        console.log('Yandex SDK Initialized');
+        ysdk = ysdk_instance;
+        
+        // Report ready state
+        ysdk.features.LoadingAPI.ready();
+
+        // Update language based on SDK environment
+        if (gameInstance && gameInstance.langManager) {
+            gameInstance.langManager.init();
+            gameInstance.langManager.updateButtons();
+        }
+    }).catch(console.error);
+}
+
+window.onload = () => {
+    gameInstance = new Game();
+    initYandex();
+};
+
+</script>
+</body>
+</html>
