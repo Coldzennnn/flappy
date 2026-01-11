@@ -1103,7 +1103,7 @@ class Game {
             } else {
                 const lastObs = this.obstacles[this.obstacles.length - 1];
                 if (CONFIG.logicalWidth - lastObs.x >= dynamicMinDistance) {
-                    this.obstacles.push(new Obstacle(this));
+                    this.obstacles.push(new Obstacle(this, lastObs));
                 }
             }
 
@@ -1297,14 +1297,28 @@ class Cat {
 }
 
 class Obstacle {
-    constructor(game) {
+    constructor(game, lastObstacle = null) {
         this.game = game;
         this.w = 70;
         this.x = game.canvas.width;
         this.passed = false;
+        
         const minHeight = 150;
         const maxTop = game.canvas.height - CONFIG.gapSize - minHeight;
-        this.topHeight = Math.floor(Math.random() * (maxTop - minHeight + 1) + minHeight);
+        
+        // --- LOGIC FIX: IMPOSSIBLE JUMPS ---
+        let minSafe = minHeight;
+        let maxSafe = maxTop;
+
+        if (lastObstacle) {
+            // Max height change allowed based on physics approximation
+            const maxDelta = 400; 
+            
+            minSafe = Math.max(minHeight, lastObstacle.topHeight - maxDelta);
+            maxSafe = Math.min(maxTop, lastObstacle.topHeight + maxDelta);
+        }
+
+        this.topHeight = Math.floor(Math.random() * (maxSafe - minSafe + 1) + minSafe);
         this.bottomY = this.topHeight + CONFIG.gapSize;
     }
     
