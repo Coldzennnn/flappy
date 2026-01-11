@@ -337,7 +337,9 @@
         <!-- Верхняя панель управления -->
         <div id="top-bar">
             <button id="btn-toggle-sound" class="icon-btn">🔊</button>
-            <button id="btn-toggle-pause" class="icon-btn" style="display: none;">⏸</button>
+            <button id="btn-toggle-pause" class="icon-btn" style="display: none;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+            </button>
         </div>
 
         <!-- Кнопка настроек на стартовом экране (видна только в START) -->
@@ -351,8 +353,6 @@
         <!-- START SCREEN -->
         <div id="start-screen" class="screen">
             <h1 class="game-title" id="txt-title">CYBER<br>CAT</h1>
-            
-            <!-- CARD REMOVED FOR CLEANER LOOK -->
             
             <button class="btn" id="btn-start">START MISSION</button>
             <div style="color: #aaa; font-size: 1.5vh; margin-top: -10px;" id="txt-tap">TAP TO JUMP</div>
@@ -394,6 +394,7 @@
                 </div>
             </div>
             
+            <button class="btn btn-restart" id="btn-exit-menu">EXIT TO MENU</button>
             <button class="btn" id="btn-settings-back">BACK</button>
         </div>
 
@@ -425,7 +426,8 @@ const TRANSLATIONS = {
         'revive_btn': '📺 REVIVE',
         'settings_title': 'SETTINGS',
         'lang_label': 'LANGUAGE',
-        'back': 'BACK'
+        'back': 'BACK',
+        'exit_menu': 'EXIT TO MENU'
     },
     'ru': {
         'title': 'КИБЕР<br>КОТ',
@@ -442,7 +444,8 @@ const TRANSLATIONS = {
         'revive_btn': '📺 СПАСТИ КОТА',
         'settings_title': 'НАСТРОЙКИ',
         'lang_label': 'ЯЗЫК',
-        'back': 'НАЗАД'
+        'back': 'НАЗАД',
+        'exit_menu': 'В ГЛАВНОЕ МЕНЮ'
     }
 };
 
@@ -515,6 +518,7 @@ class LanguageManager {
         setText('txt-settings-title', t.settings_title);
         setText('txt-lang-label', t.lang_label);
         setText('btn-settings-back', t.back);
+        setText('btn-exit-menu', t.exit_menu);
     }
 }
 
@@ -682,6 +686,7 @@ class Game {
             btnSound: document.getElementById('btn-toggle-sound'),
             btnSettingsOpen: document.getElementById('btn-settings-open'),
             btnSettingsBack: document.getElementById('btn-settings-back'),
+            btnExitMenu: document.getElementById('btn-exit-menu'),
             btnLangEn: document.getElementById('btn-lang-en'),
             btnLangRu: document.getElementById('btn-lang-ru')
         };
@@ -699,8 +704,14 @@ class Game {
 
         this.cat = new Cat(this);
         this.obstacles = [];
-        this.particles = [];
         this.background = new Background(this);
+
+        // --- OPTIMIZATION: PARTICLE POOL ---
+        this.particlePool = [];
+        for(let i=0; i<50; i++) {
+            this.particlePool.push(new Particle(0,0));
+            this.particlePool[i].active = false;
+        }
 
         this.initListeners();
         this.resize();
@@ -763,6 +774,11 @@ class Game {
             this.closeSettings();
         });
 
+        this.ui.btnExitMenu.addEventListener('click', (e) => {
+             e.stopPropagation();
+             this.exitToMenu();
+        });
+
         this.ui.btnLangEn.addEventListener('click', (e) => {
             e.stopPropagation();
             this.langManager.setLanguage('en');
@@ -793,6 +809,11 @@ class Game {
         });
     }
 
+    spawnParticle(x, y) {
+        const p = this.particlePool.find(p => !p.active);
+        if (p) p.activate(x, y);
+    }
+
     resize() {
         const windowWidth = window.innerWidth;
         const windowHeight = window.innerHeight;
@@ -815,20 +836,61 @@ class Game {
     openSettings() {
         if (this.state === STATE.START) {
             this.previousState = STATE.START;
-            this.state = STATE.SETTINGS;
-            this.ui.start.classList.add('hidden');
-            this.ui.settings.classList.remove('hidden');
-            this.ui.btnSettingsOpen.style.display = 'none';
+        } else if (this.state === STATE.PAUSED) {
+            this.previousState = STATE.PAUSED;
+        } else {
+            this.previousState = STATE.START; // Fallback
         }
+
+        this.state = STATE.SETTINGS;
+        
+        // Hide other screens
+        this.ui.start.classList.add('hidden');
+        this.ui.pause.classList.add('hidden');
+        this.ui.gameover.classList.add('hidden');
+        
+        this.ui.settings.classList.remove('hidden');
+        this.ui.btnSettingsOpen.style.display = 'none';
+        this.ui.btnPause.style.display = 'none';
     }
 
     closeSettings() {
         if (this.state === STATE.SETTINGS) {
             this.state = this.previousState;
             this.ui.settings.classList.add('hidden');
-            this.ui.start.classList.remove('hidden');
-            this.ui.btnSettingsOpen.style.display = 'block';
+            
+            if (this.state === STATE.START) {
+                this.ui.start.classList.remove('hidden');
+                this.ui.btnSettingsOpen.style.display = 'block';
+            } else if (this.state === STATE.PAUSED) {
+                this.ui.pause.classList.remove('hidden');
+            }
         }
+    }
+
+    exitToMenu() {
+        this.state = STATE.START;
+        
+        // Hide all screens
+        this.ui.settings.classList.add('hidden');
+        this.ui.pause.classList.add('hidden');
+        this.ui.gameover.classList.add('hidden');
+        this.ui.hud.classList.add('hidden');
+        
+        // Show start screen
+        this.ui.start.classList.remove('hidden');
+        this.ui.btnSettingsOpen.style.display = 'block';
+        this.ui.btnPause.style.display = 'none';
+
+        // Reset Game
+        this.cat.reset();
+        this.obstacles = [];
+        this.particlePool.forEach(p => p.active = false);
+        this.score = 0;
+        CONFIG.speed = CONFIG.initialSpeed;
+        this.hasRevived = false;
+        
+        this.lastTime = performance.now();
     }
 
     startGame() {
@@ -940,7 +1002,7 @@ class Game {
     resetGame() {
         this.cat = new Cat(this);
         this.obstacles = [];
-        this.particles = [];
+        this.particlePool.forEach(p => p.active = false);
         this.score = 0;
         this.hasRevived = false;
         
@@ -970,8 +1032,17 @@ class Game {
     }
 
     gameOver() {
+        // Гарантированно показываем экран Game Over в первую очередь
+        this.ui.gameover.classList.remove('hidden');
+        
         this.state = STATE.GAMEOVER;
-        this.sound.playCrash();
+        
+        // Безопасное воспроизведение звука
+        try {
+            this.sound.playCrash();
+        } catch (e) {
+            console.error('Audio play failed', e);
+        }
         
         if (this.score > this.highScore) {
             this.highScore = this.score;
@@ -980,7 +1051,6 @@ class Game {
 
         this.ui.hud.classList.add('hidden');
         this.ui.btnPause.style.display = 'none';
-        this.ui.gameover.classList.remove('hidden');
         this.ui.finalScore.innerText = this.score;
         this.ui.bestScore.innerText = this.highScore;
 
@@ -1013,12 +1083,8 @@ class Game {
 
         this.background.update(dt);
 
-        for (let i = this.particles.length - 1; i >= 0; i--) {
-            this.particles[i].update(dt);
-            if (this.particles[i].life <= 0) {
-                this.particles.splice(i, 1);
-            }
-        }
+        // --- OPTIMIZATION: PARTICLE POOL UPDATE ---
+        this.particlePool.forEach(p => p.update(dt));
 
         if (this.state === STATE.PLAYING) {
             this.cat.update(dt);
@@ -1096,7 +1162,8 @@ class Game {
 
         this.background.draw(this.ctx);
         this.obstacles.forEach(obs => obs.draw(this.ctx));
-        this.particles.forEach(p => p.draw(this.ctx));
+        // --- OPTIMIZATION: PARTICLE POOL DRAW ---
+        this.particlePool.forEach(p => p.draw(this.ctx));
         this.cat.draw(this.ctx);
 
         if (this.state === STATE.PAUSED || this.state === STATE.SETTINGS) {
@@ -1130,7 +1197,8 @@ class Cat {
         
         this.game.sound.playJump();
         for(let i=0; i<5; i++) {
-            this.game.particles.push(new Particle(this.x, this.y + this.h/2));
+            // --- OPTIMIZATION: USE POOL ---
+            this.game.spawnParticle(this.x, this.y + this.h/2);
         }
     }
 
@@ -1151,14 +1219,16 @@ class Cat {
 
         this.timer += dt;
         if (this.timer > 0.05) { 
-            this.game.particles.push(new Particle(this.x, this.y + this.h/2 + 5));
+            // --- OPTIMIZATION: USE POOL ---
+            this.game.spawnParticle(this.x, this.y + this.h/2 + 5);
             this.timer = 0;
         }
     }
 
     draw(ctx) {
         ctx.save();
-        ctx.translate(this.x + this.w/2, this.y + this.h/2);
+        // --- OPTIMIZATION: ROUND COORDS ---
+        ctx.translate(~~(this.x + this.w/2), ~~(this.y + this.h/2));
         ctx.rotate(this.rotation * Math.PI / 180);
 
         if (this.velocity < 0) {
@@ -1243,26 +1313,58 @@ class Obstacle {
     }
     
     draw(ctx) {
-        ctx.shadowBlur = 10;
-        ctx.shadowColor = "#0f0";
+        // --- OPTIMIZATION: NO BLUR, FAKE GLOW, ROUND COORDS ---
+        const x = ~~this.x;
+        const w = ~~this.w;
+        const th = ~~this.topHeight;
+        const by = ~~this.bottomY;
+        const gh = ~~(this.game.canvas.height - this.bottomY);
+
+        // Fake Glow (Double Stroke)
+        ctx.lineWidth = 20;
+        ctx.strokeStyle = "rgba(0, 255, 0, 0.3)";
+        
+        // Top Pipe Glow
+        ctx.beginPath();
+        ctx.rect(x, -5, w, th + 5);
+        ctx.stroke();
+
+        // Bottom Pipe Glow
+        ctx.beginPath();
+        ctx.rect(x, by, w, gh + 5);
+        ctx.stroke();
+
+        // Main Body
         ctx.fillStyle = "#001a00";
         ctx.strokeStyle = "#0f0";
         ctx.lineWidth = 4;
-        ctx.fillRect(this.x, 0, this.w, this.topHeight);
-        ctx.strokeRect(this.x, -5, this.w, this.topHeight + 5);
+        
+        // Top Pipe
+        ctx.fillRect(x, 0, w, th);
+        ctx.strokeRect(x, -5, w, th + 5);
+        
+        // Top Pipe Cap
         ctx.fillStyle = "#0f0";
-        ctx.fillRect(this.x + 10, this.topHeight - 40, this.w - 20, 10);
+        ctx.fillRect(x + 10, th - 40, w - 20, 10);
+        
+        // Bottom Pipe
         ctx.fillStyle = "#001a00";
-        ctx.fillRect(this.x, this.bottomY, this.w, this.game.canvas.height - this.bottomY);
-        ctx.strokeRect(this.x, this.bottomY, this.w, this.game.canvas.height - this.bottomY + 5);
+        ctx.fillRect(x, by, w, gh);
+        ctx.strokeRect(x, by, w, gh + 5);
+        
+        // Bottom Pipe Cap
         ctx.fillStyle = "#0f0";
-        ctx.fillRect(this.x + 10, this.bottomY + 30, this.w - 20, 10);
-        ctx.shadowBlur = 0;
+        ctx.fillRect(x + 10, by + 30, w - 20, 10);
     }
 }
 
 class Particle {
     constructor(x, y) {
+        this.active = false;
+        if (x !== undefined && y !== undefined) this.activate(x, y);
+    }
+
+    activate(x, y) {
         this.x = x;
         this.y = y;
         this.vx = (Math.random() - 0.5) * 300 - 300; 
@@ -1270,20 +1372,25 @@ class Particle {
         this.life = 1.0;
         this.color = Math.random() > 0.5 ? "#ff0055" : "#00ffff";
         this.size = Math.random() * 8 + 4;
+        this.active = true;
     }
     
     update(dt) {
+        if (!this.active) return;
         this.x += this.vx * dt;
         this.y += this.vy * dt;
         this.life -= 2.5 * dt; 
-        this.size *= (1 - 2 * dt); 
+        this.size *= (1 - 2 * dt);
+        if (this.life <= 0) this.active = false;
     }
     
     draw(ctx) {
+        if (!this.active) return;
         ctx.globalAlpha = Math.max(0, this.life);
         ctx.fillStyle = this.color;
         ctx.beginPath();
-        ctx.rect(this.x, this.y, this.size, this.size);
+        // --- OPTIMIZATION: ROUND COORDS ---
+        ctx.rect(~~this.x, ~~this.y, ~~this.size, ~~this.size);
         ctx.fill();
         ctx.globalAlpha = 1.0;
     }
@@ -1315,29 +1422,29 @@ class Background {
         ctx.strokeStyle = "rgba(100, 0, 255, 0.1)";
         ctx.lineWidth = 2;
         const gridSize = 80;
-        const offset = this.bgX % gridSize;
+        const offset = ~~this.bgX % gridSize;
         for (let x = offset; x < CONFIG.logicalWidth; x += gridSize) {
             ctx.beginPath();
-            ctx.moveTo(x, 0);
-            ctx.lineTo(x, CONFIG.logicalHeight);
+            ctx.moveTo(~~x, 0);
+            ctx.lineTo(~~x, CONFIG.logicalHeight);
             ctx.stroke();
         }
         for (let y = 0; y < CONFIG.logicalHeight; y += gridSize) {
             ctx.beginPath();
-            ctx.moveTo(0, y);
-            ctx.lineTo(CONFIG.logicalWidth, y);
+            ctx.moveTo(0, ~~y);
+            ctx.lineTo(CONFIG.logicalWidth, ~~y);
             ctx.stroke();
         }
         ctx.save();
-        ctx.translate(this.bgX, 0);
+        ctx.translate(~~this.bgX, 0);
         for(let j=0; j<2; j++) {
             const shift = j * 1600;
             this.buildings.forEach(b => {
                 ctx.fillStyle = b.color;
-                ctx.fillRect(b.x + shift, CONFIG.logicalHeight - b.h, b.w, b.h);
+                ctx.fillRect(~~(b.x + shift), ~~(CONFIG.logicalHeight - b.h), ~~b.w, ~~b.h);
                 ctx.fillStyle = "rgba(0, 255, 255, 0.2)";
                 for(let wy = CONFIG.logicalHeight - b.h + 20; wy < CONFIG.logicalHeight; wy += 40) {
-                      if(Math.random() > 0.3) ctx.fillRect(b.x + shift + 10, wy, b.w - 20, 20);
+                      if(Math.random() > 0.3) ctx.fillRect(~~(b.x + shift + 10), ~~wy, ~~(b.w - 20), 20);
                 }
             });
         }
