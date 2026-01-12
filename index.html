@@ -12,8 +12,10 @@
             margin: 0;
             padding: 0;
             width: 100vw;
-            height: 100vh;
-            background: linear-gradient(135deg, #1a0033 0%, #000000 100%);
+            /* Используем dvh для корректной работы с адресной строкой мобильных браузеров */
+            height: 100dvh; 
+            /* Цвет фона совпадает с игрой, чтобы убрать белые полосы */
+            background: #0d001a; 
             display: flex;
             justify-content: center;
             align-items: center;
@@ -31,7 +33,8 @@
         /* --- ИГРОВОЙ КОНТЕЙНЕР --- */
         #game-wrapper {
             position: relative;
-            width: 720px;
+            /* Размеры будут пересчитываться в JS, но база остается для пропорций */
+            width: 720px; 
             height: 1280px;
             box-shadow: 0 0 100px rgba(0, 255, 255, 0.2);
             overflow: hidden;
@@ -427,9 +430,55 @@
             text-shadow: 0 0 10px #000;
         }
 
+        /* --- ORIENTATION WARNING --- */
+        #orientation-warning {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            z-index: 9999;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #0ff;
+            font-size: 24px;
+            text-align: center;
+        }
+        
+        #orientation-warning svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 20px;
+            animation: rotate-phone 2s infinite ease-in-out;
+        }
+        
+        @keyframes rotate-phone {
+            0% { transform: rotate(0deg); }
+            50% { transform: rotate(-90deg); }
+            100% { transform: rotate(0deg); }
+        }
+
+        /* Show warning only in landscape */
+        @media (orientation: landscape) {
+            #orientation-warning {
+                display: flex;
+            }
+        }
+
     </style>
 </head>
 <body>
+
+<!-- ORIENTATION WARNING -->
+<div id="orientation-warning">
+    <svg viewBox="0 0 24 24" fill="currentColor">
+        <path d="M17 1.01L7 1c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM17 19H7V5h10v14z"/>
+    </svg>
+    <div>Пожалуйста, переверните устройство<br>Please rotate your device</div>
+</div>
 
 <div id="game-wrapper">
     <canvas id="gameCanvas"></canvas>
