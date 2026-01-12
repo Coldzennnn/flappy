@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <!-- Yandex Games SDK -->
-    <script src="https://yandex.ru/games/sdk/v2"></script>
+    <!-- Yandex Games SDK (Local path for archive upload) -->
+    <script src="/sdk.js"></script>
     <title>Кибер Кот: Полёт</title>
     <style>
         /* --- БАЗОВЫЕ НАСТРОЙКИ --- */
@@ -628,6 +628,12 @@
 </div>
 
 <script>
+// --- BLOCK CONTEXT MENU & SELECTION (CRITICAL FOR MODERATION) ---
+// Блокируем вызов контекстного меню и выделение, чтобы на мобильных не мешало игре
+window.addEventListener('contextmenu', (e) => { e.preventDefault(); return false; });
+window.addEventListener('dragstart', (e) => { e.preventDefault(); return false; });
+window.addEventListener('selectstart', (e) => { e.preventDefault(); return false; });
+
 /**
  * YANDEX SDK GLOBAL
  */
@@ -735,6 +741,7 @@ class LanguageManager {
     }
 
     init() {
+        // Проверяем YSDK на наличие языка. Т.к. игра стартует ПОСЛЕ инита SDK, ysdk уже должен быть.
         if (window.ysdk && window.ysdk.environment && window.ysdk.environment.i18n) {
             this.currentLang = window.ysdk.environment.i18n.lang;
         } else {
@@ -1136,6 +1143,8 @@ class Game {
             btnLangRu: document.getElementById('btn-lang-ru')
         };
 
+        // Инициализация менеджера языков
+        // В этот момент ysdk уже определен благодаря правильному порядку запуска в onload
         this.langManager = new LanguageManager();
         this.langManager.updateButtons();
 
@@ -1184,7 +1193,7 @@ class Game {
         document.addEventListener('pointerdown', unlockAudio);
         document.addEventListener('keydown', unlockAudio);
 
-        // --- AUDIO SUSPEND ON TAB HIDE (Rule Fix) ---
+        // --- AUDIO SUSPEND ON TAB HIDE (Safe Implementation) ---
         document.addEventListener('visibilitychange', () => {
             if (document.hidden) {
                 // Игрок ушел со вкладки: Глушим звук и ставим паузу
@@ -2222,34 +2231,41 @@ class Background {
 }
 
 /**
- * INITIALIZATION
+ * INITIALIZATION (FIXED LOGIC)
  */
 let gameInstance = null;
 
-function initYandex() {
-    YaGames.init().then(ysdk_instance => {
-        console.log('Yandex SDK Initialized');
-        ysdk = ysdk_instance;
-        
-        // Device check
-        if (ysdk.deviceInfo.type === 'mobile' || ysdk.deviceInfo.type === 'tablet') {
-            document.body.classList.add('mobile-device');
-        }
-        
-        // Report ready state
-        ysdk.features.LoadingAPI.ready();
-
-        // Update language based on SDK environment
-        if (gameInstance && gameInstance.langManager) {
-            gameInstance.langManager.init();
-            gameInstance.langManager.updateButtons();
-        }
-    }).catch(console.error);
-}
-
 window.onload = () => {
-    gameInstance = new Game();
-    initYandex();
+    // Check if YaGames is defined before using it
+    if (typeof YaGames !== 'undefined') {
+        // 1. Initialize Yandex SDK first
+        YaGames.init()
+            .then(ysdk_instance => {
+                console.log('Yandex SDK Initialized');
+                window.ysdk = ysdk_instance; // Set global YSDK
+                
+                // Device check via SDK
+                if (ysdk.deviceInfo.type === 'mobile' || ysdk.deviceInfo.type === 'tablet') {
+                    document.body.classList.add('mobile-device');
+                }
+
+                // 2. Start Game AFTER SDK is ready
+                // This ensures LanguageManager can read window.ysdk.environment.i18n.lang
+                gameInstance = new Game();
+
+                // 3. Report Ready to Yandex
+                ysdk.features.LoadingAPI.ready();
+            })
+            .catch(err => {
+                console.error('SDK Init Error:', err);
+                // Fallback: Start game anyway (offline mode)
+                gameInstance = new Game();
+            });
+    } else {
+        console.log('YaGames not detected. Starting in standalone mode.');
+        // Fallback: Start game immediately if SDK script is missing
+        gameInstance = new Game();
+    }
 };
 
 </script>
