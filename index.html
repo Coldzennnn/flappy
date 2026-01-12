@@ -487,7 +487,7 @@
             width: 100%;
             height: 100%;
             background: #000;
-            z-index: 9999;
+            z-index: 10000; /* Высочайший z-index для перекрытия всего */
             flex-direction: column;
             justify-content: center;
             align-items: center;
@@ -632,6 +632,24 @@
  * YANDEX SDK GLOBAL
  */
 var ysdk = null;
+
+// --- MOBILE CHECK FUNCTION ---
+function checkMobile() {
+    const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+    // Check user agent for common mobile strings
+    const isMobileRegex = /android|avantgo|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od|ad)|iris|kindle|lge |maemo|midp|mmp|mobile|o2|opera m(ob|in)i|palm( os)?|p(ixi|re)\/|plucker|pocket|psp|smartphone|symbian|treo|up\.(browser|link)|vodafone|wap|windows ce|xda|xiino/i.test(userAgent);
+    // Check for touch capability
+    const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    
+    // If either condition is true, treat as mobile/tablet
+    if (isMobileRegex || isTouch) {
+        document.body.classList.add('mobile-device');
+    }
+}
+
+// Call immediately
+checkMobile();
+
 
 /**
  * SKINS CONFIG
@@ -932,6 +950,7 @@ class SoundManager {
         this._cleanup(osc, gain);
     }
     
+    // --- NEW SOUNDS ---
     playTone(freq, type, duration, vol = 0.1) {
         if (!this._ready()) return;
         const t = this.ctx.currentTime;
@@ -954,10 +973,12 @@ class SoundManager {
     }
 
     playUiClick() {
+        // High blip
         this.playTone(1200, 'sine', 0.1, 0.05);
     }
 
     playUiBack() {
+        // Low blip
         this.playTone(400, 'sine', 0.15, 0.05);
     }
 
@@ -1433,7 +1454,7 @@ class Game {
         const skin = SKINS[this.browsingSkinIndex];
         this.ui.shopSkinName.innerText = this.langManager.get(skin.nameKey);
         this.ui.shopCredits.innerText = `${this.langManager.get('credits')}: ${this.credits}`;
-        this.ui.btnShopFreeCredits.innerText = this.langManager.get('free_credits');
+        this.ui.btnShopFreeCredits.innerHTML = this.langManager.get('free_credits');
         
         // Update Title via Language Manager to ensure correct language
         const shopTitle = document.getElementById('txt-shop-title');
