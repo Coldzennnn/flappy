@@ -234,7 +234,7 @@
             background: rgba(0, 20, 40, 0.9);
             border: 2px solid #0ff;
             color: #0ff;
-            padding: 20px 50px;
+            padding: 20px 30px; /* Уменьшил горизонтальный паддинг для мобилок */
             font-family: 'Courier New', Courier, monospace;
             font-size: 3vh;
             font-weight: bold;
@@ -243,8 +243,7 @@
             box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
             border-radius: 5px;
             transition: all 0.2s;
-            min-width: 240px;
-            min-height: 70px;
+            /* Удалены min-width для .btn, чтобы использовать .btn-wide */
             display: flex;
             justify-content: center;
             align-items: center;
@@ -255,6 +254,32 @@
             color: #000;
             box-shadow: 0 0 30px #0ff;
             transform: scale(0.96);
+        }
+
+        /* Стили для широких кнопок в меню проигрыша */
+        .gameover-buttons {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            gap: 15px;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        .btn-wide {
+            width: 80%;
+            max-width: 350px;
+            height: 60px; /* Фиксированная высота для единообразия */
+            padding: 0;   /* Убираем паддинг, контент центрируется флексом */
+            font-size: 2.5vh;
+        }
+
+        /* Стиль для суффикса (Реклама) */
+        .ad-hint {
+            font-size: 0.7em;
+            opacity: 0.6;
+            margin-left: 8px;
+            font-weight: normal;
         }
 
         .btn-restart {
@@ -283,6 +308,8 @@
             border-color: #FFFF00;
             color: #FFFF00;
             box-shadow: 0 0 15px rgba(255, 255, 0, 0.3);
+            min-width: 240px;
+            min-height: 70px;
         }
         .btn-resume:active {
             background: #FFFF00;
@@ -294,6 +321,8 @@
             color: #f0f;
             box-shadow: 0 0 15px rgba(255, 0, 255, 0.3);
             margin-top: 10px;
+            min-width: 240px;
+            min-height: 70px;
         }
         .btn-shop:active {
             background: #f0f;
@@ -305,8 +334,7 @@
             color: #aaa;
             background: rgba(0,0,0,0.5);
             box-shadow: none;
-            min-height: 50px;
-            font-size: 2.5vh;
+            /* Размеры для этой кнопки задаются через .btn-wide если она в блоке gameover */
         }
         .btn-menu-secondary:active {
             background: #aaa;
@@ -378,6 +406,12 @@
             box-shadow: none !important;
             background: rgba(20,0,0,0.5) !important;
             opacity: 0.7;
+        }
+        
+        /* Кнопки в магазине (Select/Back) тоже должны быть удобными */
+        #btn-shop-select, #btn-shop-back, #btn-shop-free-credits {
+             min-width: 200px;
+             min-height: 60px;
         }
 
         #shop-credits {
@@ -508,7 +542,7 @@
         <!-- START SCREEN -->
         <div id="start-screen" class="screen">
             <h1 class="game-title" id="txt-title">CYBER<br>CAT</h1>
-            <button class="btn" id="btn-start">START MISSION</button>
+            <button class="btn" id="btn-start" style="min-width: 240px; min-height: 70px;">START MISSION</button>
             <button class="btn btn-shop" id="btn-shop-open">SHOP</button>
             <div style="color: #aaa; font-size: 1.5vh; margin-top: 5px;" id="txt-tap">TAP TO JUMP</div>
         </div>
@@ -537,12 +571,12 @@
             <h2 class="title-paused" id="txt-paused">SYSTEM<br>PAUSED</h2>
             <button class="btn btn-resume" id="btn-resume">RESUME</button>
             <!-- Кнопка Меню в Паузе -->
-            <button class="btn btn-menu-secondary" id="btn-pause-menu">MENU</button>
+            <button class="btn btn-menu-secondary" id="btn-pause-menu" style="min-width: 240px; min-height: 70px;">MENU</button>
         </div>
 
         <!-- GAMEOVER SCREEN -->
         <div id="gameover-screen" class="screen hidden">
-            <div class="card card-red">
+            <div class="card card-red" style="margin-bottom: 20px;">
                 <div class="mission-failed" id="txt-failed">MISSION<br>FAILED</div>
                 <div class="label" id="txt-score-label">SCORE</div>
                 <div class="score-big" id="final-score">0</div>
@@ -552,10 +586,14 @@
                 </div>
             </div>
 
-            <button class="btn btn-revive" id="btn-revive" style="display: none;">📺 REVIVE</button>
-            <button class="btn btn-restart" id="btn-restart">RETRY</button>
-            <!-- Кнопка Меню в Game Over -->
-            <button class="btn btn-menu-secondary" id="btn-gameover-menu">MENU</button>
+            <!-- New Button Container -->
+            <div class="gameover-buttons">
+                <button class="btn btn-wide btn-revive" id="btn-revive" style="display: none;">
+                    📺 REVIVE <span class="ad-hint">(Ad)</span>
+                </button>
+                <button class="btn btn-wide btn-restart" id="btn-restart">RETRY</button>
+                <button class="btn btn-wide btn-menu-secondary" id="btn-gameover-menu">MENU</button>
+            </div>
         </div>
 
         <!-- SETTINGS SCREEN -->
@@ -570,7 +608,7 @@
                 </div>
             </div>
             
-            <button class="btn" id="btn-settings-back">BACK</button>
+            <button class="btn" id="btn-settings-back" style="min-width: 240px; min-height: 70px;">BACK</button>
         </div>
 
     </div>
@@ -609,7 +647,7 @@ const TRANSLATIONS = {
         'score_label': 'SCORE',
         'best_label': 'BEST:',
         'retry': 'RETRY',
-        'revive_btn': '📺 REVIVE (Ad)',
+        'revive_btn': '📺 REVIVE <span class="ad-hint">(Ad)</span>',
         'settings_title': 'SETTINGS',
         'lang_label': 'LANGUAGE',
         'back': 'BACK',
@@ -639,7 +677,7 @@ const TRANSLATIONS = {
         'score_label': 'СЧЕТ',
         'best_label': 'РЕКОРД:',
         'retry': 'ЗАНОВО',
-        'revive_btn': '📺 СПАСТИ (Реклама)',
+        'revive_btn': '📺 СПАСТИ <span class="ad-hint">(Реклама)</span>',
         'settings_title': 'НАСТРОЙКИ',
         'lang_label': 'ЯЗЫК',
         'back': 'НАЗАД',
