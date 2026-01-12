@@ -3,48 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- Yandex Games SDK -->
     <script src="https://yandex.ru/games/sdk/v2"></script>
     <title>Кибер Кот: Полёт</title>
     <style>
-        * {
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
-        
+        /* --- БАЗОВЫЕ НАСТРОЙКИ --- */
         body {
             margin: 0;
             padding: 0;
             width: 100vw;
+            /* Используем dvh для корректной работы с адресной строкой мобильных браузеров */
             height: 100dvh; 
+            /* Цвет фона совпадает с игрой, чтобы убрать белые полосы */
             background: #0d001a; 
             display: flex;
             justify-content: center;
             align-items: center;
             overflow: hidden;
             font-family: 'Courier New', Courier, monospace;
+            
             user-select: none;
             -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
             -webkit-touch-callout: none;
             touch-action: none;
         }
 
+        /* --- ИГРОВОЙ КОНТЕЙНЕР --- */
         #game-wrapper {
             position: relative;
+            /* Адаптивная ширина и высота */
             width: 100%; 
             height: 100%;
+            /* Ограничение ширины для ПК, чтобы сохранить пропорции телефона */
             max-width: 60vh; 
+            box-shadow: 0 0 100px rgba(0, 255, 255, 0.2);
             overflow: hidden;
-            background: #000;
+            background-color: #000;
         }
 
         canvas {
             display: block;
             width: 100%;
             height: 100%;
+            /* Важно: contain сохраняет пропорции канваса внутри контейнера */
             object-fit: contain; 
             background: linear-gradient(180deg, #0d001a 0%, #000033 100%);
         }
 
+        /* --- UI СЛОЙ --- */
         #ui-layer {
             position: absolute;
             top: 0;
@@ -52,33 +60,36 @@
             width: 100%;
             height: 100%;
             pointer-events: none;
+            display: flex;
+            flex-direction: column;
             z-index: 10;
         }
 
-        /* === HEADER BUTTONS === */
+        /* --- ВЕРХНЯЯ ПАНЕЛЬ --- */
         #top-bar {
             position: absolute;
-            top: 12px;
-            right: 12px;
+            top: 20px;
+            right: 20px;
             display: flex;
-            gap: 8px;
+            gap: 15px;
             pointer-events: auto;
             z-index: 100;
         }
 
         .icon-btn {
-            width: 44px;
-            height: 44px;
-            background: rgba(0, 15, 30, 0.85);
-            border: 1.5px solid #0ff;
+            width: 50px;
+            height: 50px;
+            background: rgba(0, 20, 40, 0.8);
+            border: 2px solid #0ff;
             color: #0ff;
-            font-size: 18px;
+            font-size: 24px;
             display: flex;
             justify-content: center;
             align-items: center;
             cursor: pointer;
-            border-radius: 10px;
-            transition: all 0.15s;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+            border-radius: 8px;
+            transition: all 0.2s;
         }
 
         .icon-btn:active {
@@ -90,22 +101,19 @@
         .icon-btn.muted {
             border-color: #ff0055;
             color: #ff0055;
+            box-shadow: 0 0 10px rgba(255, 0, 85, 0.3);
         }
 
-        .icon-btn svg {
-            width: 20px;
-            height: 20px;
-        }
-
+        /* Доп. стили для кнопки настроек на главном экране */
         #btn-settings-open {
             position: absolute;
-            top: 12px;
-            left: 12px;
+            top: 20px;
+            left: 20px;
             pointer-events: auto;
             z-index: 100;
         }
 
-        /* === SCREENS === */
+        /* --- ЭКРАНЫ --- */
         .screen {
             position: absolute;
             top: 0;
@@ -116,13 +124,12 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(8px);
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
             pointer-events: auto;
-            transition: opacity 0.25s;
+            transition: opacity 0.3s;
             z-index: 15;
-            padding: 20px;
-            gap: 12px;
+            gap: 20px; 
         }
 
         .screen.hidden {
@@ -130,350 +137,338 @@
             pointer-events: none;
         }
 
-        /* === TYPOGRAPHY === */
-        .title-main {
-            color: #0ff;
-            font-size: 32px;
-            font-weight: bold;
-            margin: 0;
-            text-shadow: 0 0 20px #0ff;
+        /* --- КАРТОЧНАЯ СИСТЕМА --- */
+        .card {
+            background: rgba(0, 0, 0, 0.85);
+            border: 1px solid #0ff;
+            border-radius: 15px;
+            padding: 30px 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.15);
+            min-width: 60%;
+            box-sizing: border-box;
             text-align: center;
-            line-height: 1.15;
-            letter-spacing: 2px;
+            margin-bottom: 10px;
         }
 
-        .title-section {
-            color: #0ff;
-            font-size: 22px;
-            font-weight: bold;
-            margin: 0;
-            text-shadow: 0 0 15px #0ff;
-            text-align: center;
+        .card-red {
+            border-color: #ff0055;
+            box-shadow: 0 0 20px rgba(255, 0, 85, 0.15);
         }
 
-        .title-failed {
+        /* --- ТИПОГРАФИКА --- */
+        .game-title {
+            color: #0ff;
+            font-size: 6vh; /* Уменьшено с 8vh, чтобы вместить подзаголовок */
+            margin: 0 0 30px 0; /* Немного уменьшен отступ */
+            text-shadow: 0 0 10px #0ff, 0 0 20px #0ff;
+            text-align: center;
+            line-height: 1.1;
+        }
+
+        .mission-failed {
             color: #ff0055;
-            font-size: 26px;
-            font-weight: bold;
-            margin: 0 0 8px 0;
-            text-shadow: 0 0 15px #ff0055;
+            font-size: 5vh;
+            margin: 0 0 20px 0;
+            text-shadow: 0 0 10px #ff0055;
             text-align: center;
-            line-height: 1.15;
+            font-weight: bold;
+            line-height: 1.1;
+        }
+
+        .label {
+            color: #aaa;
+            font-size: 1.8vh;
+            letter-spacing: 2px;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+
+        .val-text {
+            color: #0ff; 
+            font-size: 2vh; 
+            margin-top: 5px;
+        }
+
+        .score-big {
+            font-size: 8vh;
+            color: #fff;
+            font-weight: bold;
+            margin: 0 0 15px 0;
+            text-shadow: 0 0 10px rgba(255,255,255,0.5);
+            line-height: 1;
+        }
+
+        .best-score-container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 8px 15px;
+            border-radius: 20px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .best-label {
+            color: #0ff;
+            font-size: 2vh;
+            font-weight: bold;
+        }
+
+        .best-value {
+            color: #fff;
+            font-size: 2vh;
         }
 
         .title-paused {
             color: #FFFF00;
-            font-size: 26px;
-            font-weight: bold;
-            text-shadow: 0 0 15px #FFFF00;
+            text-shadow: 0 0 10px #FFFF00;
+            font-size: 6vh;
+            margin-bottom: 20px;
             text-align: center;
-            margin-bottom: 15px;
         }
 
-        .label {
-            color: #888;
-            font-size: 10px;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-        }
-
-        .hint {
-            color: #666;
-            font-size: 11px;
-            margin-top: 8px;
-        }
-
-        /* === BUTTONS === */
+        /* --- КНОПКИ --- */
         .btn {
             background: rgba(0, 20, 40, 0.9);
-            border: 1.5px solid #0ff;
+            border: 2px solid #0ff;
             color: #0ff;
-            padding: 14px 28px;
-            font-family: inherit;
-            font-size: 13px;
+            padding: 20px 30px; /* Уменьшил горизонтальный паддинг для мобилок */
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 3vh;
             font-weight: bold;
             text-transform: uppercase;
-            letter-spacing: 1px;
             cursor: pointer;
-            border-radius: 8px;
-            transition: all 0.15s;
-            min-width: 160px;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+            border-radius: 5px;
+            transition: all 0.2s;
+            /* Удалены min-width для .btn, чтобы использовать .btn-wide */
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         .btn:active {
             background: #0ff;
             color: #000;
+            box-shadow: 0 0 30px #0ff;
             transform: scale(0.96);
         }
 
-        .btn-primary {
-            background: linear-gradient(180deg, rgba(0,255,255,0.2) 0%, rgba(0,255,255,0.05) 100%);
-            box-shadow: 0 0 20px rgba(0,255,255,0.2);
+        /* Стили для широких кнопок в меню проигрыша */
+        .gameover-buttons {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            gap: 15px;
+            align-items: center;
+            margin-top: 10px;
         }
 
-        .btn-danger {
+        .btn-wide {
+            width: 80%;
+            max-width: 350px;
+            height: 60px; /* Фиксированная высота для единообразия */
+            padding: 0;   /* Убираем паддинг, контент центрируется флексом */
+            font-size: 2.5vh;
+        }
+
+        /* Стиль для суффикса (Реклама) */
+        .ad-hint {
+            font-size: 0.7em;
+            opacity: 0.6;
+            margin-left: 8px;
+            font-weight: normal;
+        }
+
+        .btn-restart {
             border-color: #ff0055;
             color: #ff0055;
+            box-shadow: 0 0 15px rgba(255, 0, 85, 0.3);
         }
-        .btn-danger:active {
+        .btn-restart:active {
             background: #ff0055;
             color: #000;
+            box-shadow: 0 0 30px #ff0055;
         }
-
-        .btn-success {
-            border-color: #00ff88;
-            color: #00ff88;
+        
+        .btn-revive {
+            border-color: #00ff00;
+            color: #00ff00;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.3);
         }
-        .btn-success:active {
-            background: #00ff88;
+        .btn-revive:active {
+            background: #00ff00;
             color: #000;
+            box-shadow: 0 0 30px #00ff00;
         }
 
-        .btn-warning {
+        .btn-resume {
             border-color: #FFFF00;
             color: #FFFF00;
+            box-shadow: 0 0 15px rgba(255, 255, 0, 0.3);
+            min-width: 240px;
+            min-height: 70px;
         }
-        .btn-warning:active {
+        .btn-resume:active {
             background: #FFFF00;
             color: #000;
         }
 
-        .btn-purple {
-            border-color: #c0f;
-            color: #c0f;
+        .btn-shop {
+            border-color: #f0f;
+            color: #f0f;
+            box-shadow: 0 0 15px rgba(255, 0, 255, 0.3);
+            margin-top: 10px;
+            min-width: 240px;
+            min-height: 70px;
         }
-        .btn-purple:active {
-            background: #c0f;
+        .btn-shop:active {
+            background: #f0f;
             color: #000;
         }
 
-        .btn-ghost {
-            border-color: #555;
-            color: #888;
+        .btn-menu-secondary {
+            border: 1px solid #aaa;
+            color: #aaa;
             background: rgba(0,0,0,0.5);
+            box-shadow: none;
+            /* Размеры для этой кнопки задаются через .btn-wide если она в блоке gameover */
         }
-        .btn-ghost:active {
-            background: #555;
+        .btn-menu-secondary:active {
+            background: #aaa;
             color: #000;
         }
 
-        .btn-disabled {
-            border-color: #333 !important;
-            color: #555 !important;
-            background: rgba(30,30,30,0.5) !important;
-            cursor: default;
-        }
-
-        .btn-small {
-            padding: 10px 20px;
-            font-size: 11px;
-            min-width: 120px;
-        }
-
-        .ad-tag {
-            font-size: 9px;
-            opacity: 0.6;
-            margin-left: 6px;
-            font-weight: normal;
-        }
-
-        /* === CARD === */
-        .card {
-            background: rgba(0, 0, 0, 0.8);
-            border: 1px solid rgba(0,255,255,0.3);
-            border-radius: 16px;
-            padding: 20px 25px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 85%;
-            max-width: 280px;
-        }
-
-        .card-danger {
-            border-color: rgba(255,0,85,0.3);
-        }
-
-        /* === SCORE DISPLAY === */
-        .score-big {
-            font-size: 52px;
-            color: #fff;
-            font-weight: bold;
-            margin: 5px 0 12px 0;
-            text-shadow: 0 0 20px rgba(255,255,255,0.3);
-            line-height: 1;
-        }
-
-        .best-row {
+        /* --- SHOP STYLES --- */
+        .shop-container {
             display: flex;
             align-items: center;
-            gap: 8px;
-            background: rgba(255,255,255,0.08);
-            padding: 6px 14px;
-            border-radius: 20px;
+            gap: 20px;
+            margin-bottom: 20px;
         }
-
-        .best-row span:first-child {
-            color: #0ff;
-            font-size: 12px;
-            font-weight: bold;
-        }
-
-        .best-row span:last-child {
-            color: #fff;
-            font-size: 12px;
-        }
-
-        /* === SHOP === */
-        #shop-screen {
-            padding: 60px 15px 20px 15px;
-            justify-content: flex-start;
-            gap: 10px;
-        }
-
-        .shop-header {
-            text-align: center;
-            margin-bottom: 5px;
-        }
-
-        .shop-credits {
-            color: #FFFF00;
-            font-size: 14px;
-            font-weight: bold;
-            margin-top: 6px;
-        }
-
-        .shop-preview {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin: 10px 0;
-        }
-
         .preview-box {
-            width: 130px;
-            height: 150px;
+            width: 200px;
+            height: 250px;
+            border: 2px solid #555;
             background: rgba(0,0,0,0.8);
-            border: 1.5px solid #444;
-            border-radius: 12px;
+            border-radius: 10px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            padding: 12px;
+            justify-content: space-between;
+            padding: 20px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
         }
-
-        #shopCanvas {
-            width: 100px;
-            height: 100px;
+        .arrow-btn {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 40px;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: 0.2s;
         }
-
+        .arrow-btn:active {
+            transform: scale(0.8);
+            color: #0ff;
+        }
         .skin-name {
             color: #fff;
-            font-size: 11px;
-            margin-top: 8px;
+            font-size: 2vh;
+            margin-top: 10px;
             text-align: center;
             font-weight: bold;
+            text-shadow: 0 0 5px rgba(255,255,255,0.5);
+        }
+        
+        /* Кнопки магазина */
+        .btn-equipped {
+            border-color: #555 !important;
+            color: #888 !important;
+            box-shadow: none !important;
+            background: rgba(50,50,50,0.5) !important;
+            cursor: default;
+        }
+        .btn-buy {
+            border-color: #FFFF00 !important;
+            color: #FFFF00 !important;
+            box-shadow: 0 0 15px rgba(255, 255, 0, 0.3) !important;
+        }
+        .btn-buy:active {
+            background: #FFFF00 !important;
+            color: #000 !important;
+        }
+        .btn-locked {
+            border-color: #ff0055 !important;
+            color: #ff0055 !important;
+            box-shadow: none !important;
+            background: rgba(20,0,0,0.5) !important;
+            opacity: 0.7;
+        }
+        
+        /* Кнопки в магазине (Select/Back) тоже должны быть удобными */
+        #btn-shop-select, #btn-shop-back, #btn-shop-free-credits {
+             min-width: 200px;
+             min-height: 60px;
         }
 
-        .arrow-btn {
-            width: 44px;
-            height: 44px;
-            background: rgba(0, 20, 40, 0.9);
-            border: 1.5px solid #0ff;
-            color: #0ff;
-            font-size: 18px;
-            border-radius: 10px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: 0.15s;
+        #shop-credits {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #FFFF00;
+            font-size: 3vh;
+            font-weight: bold;
+            text-shadow: 0 0 10px #FFFF00;
+            z-index: 101; /* Поверх кнопки настроек */
         }
 
-        .arrow-btn:active {
-            transform: scale(0.9);
-            background: #0ff;
-            color: #000;
-        }
-
-        .shop-actions {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            width: 100%;
-            max-width: 200px;
-            align-items: center;
-        }
-
-        .shop-actions .btn {
-            width: 100%;
-            padding: 12px 20px;
-        }
-
-        /* === SETTINGS === */
-        .settings-card {
-            width: 85%;
-            max-width: 260px;
-        }
-
+        /* --- НАСТРОЙКИ (ЯЗЫК) --- */
         .lang-group {
             display: flex;
-            gap: 8px;
-            margin-top: 12px;
+            gap: 15px;
+            margin-top: 15px;
             width: 100%;
+            justify-content: center;
         }
 
         .btn-lang {
             flex: 1;
             padding: 10px;
-            border: 1px solid #444;
+            border: 1px solid #555;
             background: rgba(0, 0, 0, 0.5);
-            color: #666;
+            color: #888;
             cursor: pointer;
             font-family: inherit;
-            font-size: 11px;
-            border-radius: 6px;
+            font-size: 2vh;
             transition: all 0.2s;
         }
 
         .btn-lang.active {
             border-color: #0ff;
-            background: rgba(0, 255, 255, 0.15);
+            background: rgba(0, 255, 255, 0.2);
             color: #0ff;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);
         }
 
-        /* === HUD === */
+        /* --- HUD --- */
         #hud {
             position: absolute;
-            top: 12%;
+            top: 10%;
             width: 100%;
             text-align: center;
             pointer-events: none;
         }
-
         #score-display {
-            font-size: 48px;
-            color: rgba(255, 255, 255, 0.85);
+            font-size: 8vh;
+            color: rgba(255, 255, 255, 0.8);
             font-weight: bold;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+            text-shadow: 0 0 10px #000;
         }
 
-        /* === BUTTON GROUPS === */
-        .btn-group {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            width: 100%;
-            max-width: 200px;
-            align-items: center;
-        }
-
-        .btn-group .btn {
-            width: 100%;
-        }
-
-        /* === ORIENTATION WARNING === */
+        /* --- ORIENTATION WARNING --- */
         #orientation-warning {
             display: none;
             position: fixed;
@@ -487,58 +482,40 @@
             justify-content: center;
             align-items: center;
             color: #0ff;
-            font-size: 16px;
+            font-size: 24px;
             text-align: center;
-            padding: 30px;
         }
         
         #orientation-warning svg {
-            width: 50px;
-            height: 50px;
+            width: 64px;
+            height: 64px;
             margin-bottom: 20px;
             animation: rotate-phone 2s infinite ease-in-out;
         }
         
         @keyframes rotate-phone {
-            0%, 100% { transform: rotate(0deg); }
+            0% { transform: rotate(0deg); }
             50% { transform: rotate(-90deg); }
+            100% { transform: rotate(0deg); }
         }
 
+        /* Show warning only in landscape AND if it's a mobile device (checked in JS) */
         @media (orientation: landscape) {
             body.mobile-device #orientation-warning {
                 display: flex;
             }
         }
 
-        /* === RESPONSIVE === */
-        @media (max-height: 550px) {
-            .title-main { font-size: 26px; }
-            .title-section { font-size: 18px; }
-            .title-failed { font-size: 22px; }
-            .score-big { font-size: 42px; }
-            .btn { padding: 11px 22px; font-size: 12px; }
-            .card { padding: 15px 20px; }
-            .preview-box { width: 110px; height: 130px; }
-            #shopCanvas { width: 80px; height: 80px; }
-            #score-display { font-size: 40px; }
-        }
-
-        @media (max-height: 450px) {
-            .screen { gap: 8px; padding: 15px; }
-            .title-main { font-size: 22px; }
-            .score-big { font-size: 36px; }
-            .btn { padding: 9px 18px; font-size: 11px; min-width: 140px; }
-            .btn-group { gap: 6px; }
-        }
     </style>
 </head>
 <body>
 
+<!-- ORIENTATION WARNING -->
 <div id="orientation-warning">
     <svg viewBox="0 0 24 24" fill="currentColor">
         <path d="M17 1.01L7 1c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM17 19H7V5h10v14z"/>
     </svg>
-    <div>Пожалуйста, переверните устройство<br><br>Please rotate your device</div>
+    <div>Пожалуйста, переверните устройство<br>Please rotate your device</div>
 </div>
 
 <div id="game-wrapper">
@@ -546,130 +523,142 @@
 
     <div id="ui-layer">
         
+        <!-- Верхняя панель управления -->
         <div id="top-bar">
             <button id="btn-toggle-sound" class="icon-btn">🔊</button>
             <button id="btn-toggle-pause" class="icon-btn" style="display: none;">
-                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
             </button>
         </div>
 
+        <!-- Кнопка настроек на стартовом экране (видна только в START) -->
         <button id="btn-settings-open" class="icon-btn">⚙️</button>
 
+        <!-- HUD -->
         <div id="hud" class="hidden">
             <div id="score-display">0</div>
         </div>
 
-        <!-- START -->
+        <!-- START SCREEN -->
         <div id="start-screen" class="screen">
-            <h1 class="title-main" id="txt-title">CYBER<br>CAT</h1>
-            <button class="btn btn-primary" id="btn-start">START</button>
-            <button class="btn btn-purple btn-small" id="btn-shop-open">SHOP</button>
-            <div class="hint" id="txt-tap">TAP TO FLY</div>
+            <h1 class="game-title" id="txt-title">CYBER<br>CAT</h1>
+            <button class="btn" id="btn-start" style="min-width: 240px; min-height: 70px;">START MISSION</button>
+            <button class="btn btn-shop" id="btn-shop-open">SHOP</button>
+            <div style="color: #aaa; font-size: 1.5vh; margin-top: 5px;" id="txt-tap">TAP TO JUMP</div>
         </div>
         
-        <!-- SHOP -->
+        <!-- SHOP SCREEN -->
         <div id="shop-screen" class="screen hidden">
-            <div class="shop-header">
-                <h2 class="title-section" id="txt-shop-title">SHOP</h2>
-                <div class="shop-credits" id="shop-credits">0</div>
-            </div>
+            <h1 class="game-title" id="txt-shop-title" style="font-size: 5vh; margin-bottom: 10px;">ARMORY</h1>
+            <div id="shop-credits">CREDITS: 0</div>
             
-            <div class="shop-preview">
+            <div class="shop-container">
                 <button class="arrow-btn" id="btn-shop-prev">◀</button>
                 <div class="preview-box">
-                    <canvas id="shopCanvas" width="100" height="100"></canvas>
+                    <canvas id="shopCanvas" width="160" height="160" style="width: 160px; height: 160px;"></canvas>
                     <div class="skin-name" id="shop-skin-name">CYBER CAT</div>
                 </div>
                 <button class="arrow-btn" id="btn-shop-next">▶</button>
             </div>
 
-            <div class="shop-actions">
-                <button class="btn" id="btn-shop-select">SELECT</button>
-                <button class="btn btn-success btn-small" id="btn-shop-free-credits">📺 +100</button>
-                <button class="btn btn-ghost btn-small" id="btn-shop-back">BACK</button>
-            </div>
+            <button class="btn" id="btn-shop-select">SELECT</button>
+            <button class="btn btn-revive" id="btn-shop-free-credits" style="margin-top: 10px; font-size: 2vh;">📺 FREE CREDITS</button>
+            <button class="btn" id="btn-shop-back">BACK</button>
         </div>
 
-        <!-- PAUSE -->
+        <!-- PAUSE SCREEN -->
         <div id="pause-screen" class="screen hidden">
-            <div class="title-paused" id="txt-paused">PAUSED</div>
-            <div class="btn-group">
-                <button class="btn btn-warning" id="btn-resume">RESUME</button>
-                <button class="btn btn-ghost btn-small" id="btn-pause-menu">MENU</button>
-            </div>
+            <h2 class="title-paused" id="txt-paused">SYSTEM<br>PAUSED</h2>
+            <button class="btn btn-resume" id="btn-resume">RESUME</button>
+            <!-- Кнопка Меню в Паузе -->
+            <button class="btn btn-menu-secondary" id="btn-pause-menu" style="min-width: 240px; min-height: 70px;">MENU</button>
         </div>
 
-        <!-- GAMEOVER -->
+        <!-- GAMEOVER SCREEN -->
         <div id="gameover-screen" class="screen hidden">
-            <div class="card card-danger">
-                <div class="title-failed" id="txt-failed">GAME OVER</div>
+            <div class="card card-red" style="margin-bottom: 20px;">
+                <div class="mission-failed" id="txt-failed">MISSION<br>FAILED</div>
                 <div class="label" id="txt-score-label">SCORE</div>
                 <div class="score-big" id="final-score">0</div>
-                <div class="best-row">
-                    <span id="txt-best-label">BEST:</span>
-                    <span id="best-score">0</span>
+                <div class="best-score-container">
+                    <span class="best-label" id="txt-best-label">BEST:</span>
+                    <span class="best-value" id="best-score">0</span>
                 </div>
             </div>
 
-            <div class="btn-group" style="margin-top: 5px;">
-                <button class="btn btn-success" id="btn-revive" style="display: none;">
-                    📺 REVIVE<span class="ad-tag">(Ad)</span>
+            <!-- New Button Container -->
+            <div class="gameover-buttons">
+                <button class="btn btn-wide btn-revive" id="btn-revive" style="display: none;">
+                    📺 REVIVE <span class="ad-hint">(Ad)</span>
                 </button>
-                <button class="btn btn-danger" id="btn-restart">RETRY</button>
-                <button class="btn btn-ghost btn-small" id="btn-gameover-menu">MENU</button>
+                <button class="btn btn-wide btn-restart" id="btn-restart">RETRY</button>
+                <button class="btn btn-wide btn-menu-secondary" id="btn-gameover-menu">MENU</button>
             </div>
         </div>
 
-        <!-- SETTINGS -->
+        <!-- SETTINGS SCREEN -->
         <div id="settings-screen" class="screen hidden">
-            <div class="card settings-card">
-                <div class="title-section" id="txt-settings-title" style="margin-bottom: 15px;">SETTINGS</div>
+            <div class="card">
+                <div class="label" style="color:#fff; font-size:3vh; margin-bottom:20px;" id="txt-settings-title">SETTINGS</div>
+                
                 <div class="label" id="txt-lang-label">LANGUAGE</div>
                 <div class="lang-group">
-                    <button class="btn-lang" id="btn-lang-en">EN</button>
-                    <button class="btn-lang" id="btn-lang-ru">RU</button>
+                    <button class="btn-lang" id="btn-lang-en">ENGLISH</button>
+                    <button class="btn-lang" id="btn-lang-ru">РУССКИЙ</button>
                 </div>
             </div>
-            <button class="btn btn-ghost btn-small" id="btn-settings-back" style="margin-top: 10px;">BACK</button>
+            
+            <button class="btn" id="btn-settings-back" style="min-width: 240px; min-height: 70px;">BACK</button>
         </div>
 
     </div>
 </div>
 
 <script>
+/**
+ * YANDEX SDK GLOBAL
+ */
 var ysdk = null;
 
+/**
+ * SKINS CONFIG
+ */
 const SKINS = [
     { id: 0, nameKey: 'skin_0', price: 0, color: '#00FFFF', flame: '#FFFF00', eyeColor: '#fff', jetpackColor: '#FFFF00', bodyColor: '#000' },
     { id: 1, nameKey: 'skin_1', price: 100, color: '#FF00FF', flame: '#ff66ff', eyeColor: '#0ff', jetpackColor: '#800080', bodyColor: '#1a001a' },
     { id: 2, nameKey: 'skin_2', price: 250, color: '#00FFFF', flame: '#e0ffff', eyeColor: '#0088ff', jetpackColor: '#C0C0C0', bodyColor: '#FFFFFF' },
-    { id: 3, nameKey: 'skin_3', price: 500, color: '#FF4500', flame: '#FF4500', eyeColor: '#fff', jetpackColor: '#FF0000', bodyColor: '#110000' },
+    { id: 3, nameKey: 'skin_3', price: 500, color: '#FF4500', flame: '#FF4500', eyeColor: '#fff', jetpackColor: '#FF0000', bodyColor: '#110000' }, // INFERNO
     { id: 4, nameKey: 'skin_4', price: 1000, color: '#FFD700', flame: '#ffffff', eyeColor: '#fff', jetpackColor: '#DAA520', bodyColor: '#000' }
 ];
 
+/**
+ * LOCALIZATION SYSTEM
+ */
 const TRANSLATIONS = {
     'en': {
-        'title': 'CYBER<br>CAT',
-        'tap': 'TAP TO FLY',
-        'start': 'START',
-        'paused': 'PAUSED',
+        'title': 'CYBER CAT:<br>FLIGHT',
+        'mission_label': 'MISSION PROTOCOL',
+        'mission_val': 'AVOID OBSTACLES',
+        'tap': 'TAP TO JUMP',
+        'start': 'START MISSION',
+        'paused': 'SYSTEM<br>PAUSED',
         'resume': 'RESUME',
-        'failed': 'GAME OVER',
+        'failed': 'MISSION<br>FAILED',
         'score_label': 'SCORE',
         'best_label': 'BEST:',
         'retry': 'RETRY',
-        'revive_btn': '📺 REVIVE<span class="ad-tag">(Ad)</span>',
+        'revive_btn': '📺 REVIVE <span class="ad-hint">(Ad)</span>',
         'settings_title': 'SETTINGS',
         'lang_label': 'LANGUAGE',
         'back': 'BACK',
         'menu_btn': 'MENU',
         'shop': 'SHOP',
-        'shop_title': 'SHOP',
+        'shop_title': 'ARMORY',
         'select': 'SELECT',
         'selected': 'EQUIPPED',
         'buy': 'BUY',
         'credits': 'CREDITS',
-        'free_credits': '📺 +100',
+        'free_credits': '📺 AD: +100 CREDITS',
         'skin_0': 'CYBER CAT',
         'skin_1': 'NEON CAT',
         'skin_2': 'WHITE CAT',
@@ -677,16 +666,18 @@ const TRANSLATIONS = {
         'skin_4': 'GOLDEN CAT'
     },
     'ru': {
-        'title': 'КИБЕР<br>КОТ',
-        'tap': 'НАЖМИ ЧТОБЫ ЛЕТЕТЬ',
-        'start': 'СТАРТ',
-        'paused': 'ПАУЗА',
+        'title': 'КИБЕР КОТ:<br>ПОЛЁТ',
+        'mission_label': 'ЦЕЛЬ МИССИИ',
+        'mission_val': 'ИЗБЕГАЙ ПРЕПЯТСТВИЙ',
+        'tap': 'НАЖМИ ДЛЯ ПРЫЖКА',
+        'start': 'НАЧАТЬ',
+        'paused': 'СИСТЕМА<br>НА ПАУЗЕ',
         'resume': 'ПРОДОЛЖИТЬ',
-        'failed': 'КОНЕЦ ИГРЫ',
-        'score_label': 'СЧЁТ',
-        'best_label': 'ЛУЧШИЙ:',
+        'failed': 'МИССИЯ<br>ПРОВАЛЕНА',
+        'score_label': 'СЧЕТ',
+        'best_label': 'РЕКОРД:',
         'retry': 'ЗАНОВО',
-        'revive_btn': '📺 СПАСТИ<span class="ad-tag">(Реклама)</span>',
+        'revive_btn': '📺 СПАСТИ <span class="ad-hint">(Реклама)</span>',
         'settings_title': 'НАСТРОЙКИ',
         'lang_label': 'ЯЗЫК',
         'back': 'НАЗАД',
@@ -697,9 +688,9 @@ const TRANSLATIONS = {
         'selected': 'ВЫБРАНО',
         'buy': 'КУПИТЬ',
         'credits': 'КРЕДИТЫ',
-        'free_credits': '📺 +100',
+        'free_credits': '📺 РЕКЛАМА: +100',
         'skin_0': 'КИБЕР КОТ',
-        'skin_1': 'НЕОН КОТ',
+        'skin_1': 'НЕОНОВАЯ КОШКА',
         'skin_2': 'БЕЛЫЙ КОТ',
         'skin_3': 'ИНФЕРНО КОТ',
         'skin_4': 'ЗОЛОТОЙ КОТ'
@@ -713,13 +704,18 @@ class LanguageManager {
     }
 
     init() {
-        if (window.ysdk?.environment?.i18n?.lang) {
+        if (window.ysdk && window.ysdk.environment && window.ysdk.environment.i18n) {
             this.currentLang = window.ysdk.environment.i18n.lang;
         } else {
             const userLang = navigator.language || navigator.userLanguage; 
-            if (userLang) this.currentLang = userLang.substr(0, 2);
+            if (userLang) {
+                this.currentLang = userLang.substr(0, 2);
+            }
         }
-        this.currentLang = ['ru', 'be', 'kk', 'uk', 'uz'].includes(this.currentLang) ? 'ru' : 'en';
+
+        const isRu = ['ru', 'be', 'kk', 'uk', 'uz'].some(code => this.currentLang === code);
+        this.currentLang = isRu ? 'ru' : 'en';
+
         this.updateTexts();
     }
 
@@ -732,185 +728,296 @@ class LanguageManager {
     }
 
     updateButtons() {
-        document.getElementById('btn-lang-en').classList.toggle('active', this.currentLang === 'en');
-        document.getElementById('btn-lang-ru').classList.toggle('active', this.currentLang === 'ru');
+        const btnEn = document.getElementById('btn-lang-en');
+        const btnRu = document.getElementById('btn-lang-ru');
+        
+        if (this.currentLang === 'en') {
+            btnEn.classList.add('active');
+            btnRu.classList.remove('active');
+        } else {
+            btnEn.classList.remove('active');
+            btnRu.classList.add('active');
+        }
     }
 
     updateTexts() {
         const t = TRANSLATIONS[this.currentLang];
-        const set = (id, txt) => { const el = document.getElementById(id); if (el) el.innerHTML = txt; };
         
-        set('txt-title', t.title);
-        set('txt-tap', t.tap);
-        set('btn-start', t.start);
-        set('btn-shop-open', t.shop);
-        set('txt-shop-title', t.shop_title);
-        set('txt-paused', t.paused);
-        set('btn-resume', t.resume);
-        set('txt-failed', t.failed);
-        set('txt-score-label', t.score_label);
-        set('txt-best-label', t.best_label);
-        set('btn-restart', t.retry);
-        set('btn-revive', t.revive_btn);
-        set('txt-settings-title', t.settings_title);
-        set('txt-lang-label', t.lang_label);
-        set('btn-settings-back', t.back);
-        set('btn-shop-back', t.back);
-        set('btn-shop-free-credits', t.free_credits);
-        set('btn-pause-menu', t.menu_btn);
-        set('btn-gameover-menu', t.menu_btn);
+        const setText = (id, text) => {
+            const el = document.getElementById(id);
+            if (el) el.innerHTML = text;
+        };
+
+        setText('txt-title', t.title);
+        setText('txt-mission-label', t.mission_label);
+        setText('txt-mission-val', t.mission_val);
+        setText('txt-tap', t.tap);
+        setText('btn-start', t.start);
+        setText('btn-shop-open', t.shop);
+        setText('txt-shop-title', t.shop_title);
+        setText('txt-paused', t.paused);
+        setText('btn-resume', t.resume);
+        setText('txt-failed', t.failed);
+        setText('txt-score-label', t.score_label);
+        setText('txt-best-label', t.best_label);
+        setText('btn-restart', t.retry);
+        setText('btn-revive', t.revive_btn);
+        setText('txt-settings-title', t.settings_title);
+        setText('txt-lang-label', t.lang_label);
+        setText('btn-settings-back', t.back);
+        setText('btn-shop-back', t.back);
+        setText('btn-shop-free-credits', t.free_credits);
+        setText('btn-pause-menu', t.menu_btn);
+        setText('btn-gameover-menu', t.menu_btn);
     }
     
-    get(key) { return TRANSLATIONS[this.currentLang][key] || key; }
+    get(key) {
+        return TRANSLATIONS[this.currentLang][key] || key;
+    }
 }
 
+/**
+ * AUDIO SYSTEM
+ */
 class SoundManager {
     constructor() {
         this.ctx = null;
         this.muted = false;
         this.initialized = false;
-        this.lastJump = 0;
-        this.lastScore = 0;
-        this.lastClick = 0;
-        this.active = 0;
-        this.max = 6;
     }
 
     init() {
         if (this.initialized) return;
         try {
-            this.ctx = new (window.AudioContext || window.webkitAudioContext)({ latencyHint: 'interactive' });
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            this.ctx = new AudioContext({ latencyHint: 'interactive' });
             this.initialized = true;
-        } catch (e) {}
+        } catch (e) {
+            console.error('Web Audio API not supported');
+        }
     }
 
     toggleMute() {
         this.muted = !this.muted;
-        if (!this.muted && this.ctx?.state === 'suspended') this.ctx.resume();
+        // Resume if unmuted
+        if (!this.muted && this.ctx && this.ctx.state === 'suspended') {
+            this.ctx.resume();
+        }
         return this.muted;
     }
 
-    suspend() { if (this.ctx?.state === 'running') this.ctx.suspend(); }
-    resume() { if (this.ctx?.state === 'suspended' && !this.muted) this.ctx.resume(); }
+    suspendAudio() {
+        if (this.ctx && this.ctx.state === 'running') {
+            this.ctx.suspend();
+        }
+    }
 
-    _ok(last, th) {
+    resumeAudio() {
+        if (this.ctx && this.ctx.state === 'suspended' && !this.muted) {
+            this.ctx.resume();
+        }
+    }
+
+    // Helper to ensure context is ready
+    _ready() {
         if (!this.initialized) this.init();
-        if (!this.ctx || this.muted || this.active >= this.max) return false;
-        if (performance.now() - last < th) return false;
+        if (!this.ctx) return false;
+        if (this.muted) return false;
         if (this.ctx.state === 'suspended') this.ctx.resume();
         return true;
     }
 
-    _play(freq, type, dur, vol) {
-        this.active++;
-        const t = this.ctx.currentTime;
-        const o = this.ctx.createOscillator();
-        const g = this.ctx.createGain();
-        o.connect(g); g.connect(this.ctx.destination);
-        o.type = type;
-        o.frequency.setValueAtTime(freq, t);
-        g.gain.setValueAtTime(vol, t);
-        g.gain.exponentialRampToValueAtTime(0.001, t + dur);
-        o.onended = () => this.active--;
-        o.start(t); o.stop(t + dur);
-    }
-
     playJump() {
-        if (!this._ok(this.lastJump, 50)) return;
-        this.lastJump = performance.now();
+        if (!this._ready()) return;
+
         const t = this.ctx.currentTime;
-        const o = this.ctx.createOscillator();
-        const g = this.ctx.createGain();
-        o.connect(g); g.connect(this.ctx.destination);
-        o.type = 'square';
-        o.frequency.setValueAtTime(150, t);
-        o.frequency.exponentialRampToValueAtTime(400, t + 0.05);
-        g.gain.setValueAtTime(0.07, t);
-        g.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
-        this.active++;
-        o.onended = () => this.active--;
-        o.start(t); o.stop(t + 0.05);
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(150, t);
+        osc.frequency.exponentialRampToValueAtTime(400, t + 0.05);
+
+        gain.gain.setValueAtTime(0.1, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+
+        osc.start(t);
+        osc.stop(t + 0.05);
     }
 
     playScore() {
-        if (!this._ok(this.lastScore, 80)) return;
-        this.lastScore = performance.now();
-        this._play(1000, 'sine', 0.08, 0.04);
+        if (!this._ready()) return;
+        
+        const t = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(800, t);
+        osc.frequency.exponentialRampToValueAtTime(1500, t + 0.08);
+
+        gain.gain.setValueAtTime(0.05, t);
+        gain.gain.linearRampToValueAtTime(0.0, t + 0.08);
+
+        osc.start(t);
+        osc.stop(t + 0.08);
     }
 
     playCrash() {
-        if (!this._ok(0, 0)) return;
+        if (!this._ready()) return;
+        
         const t = this.ctx.currentTime;
-        const o = this.ctx.createOscillator();
-        const g = this.ctx.createGain();
-        o.connect(g); g.connect(this.ctx.destination);
-        o.type = 'sawtooth';
-        o.frequency.setValueAtTime(100, t);
-        o.frequency.exponentialRampToValueAtTime(10, t + 0.25);
-        g.gain.setValueAtTime(0.08, t);
-        g.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
-        this.active++;
-        o.onended = () => this.active--;
-        o.start(t); o.stop(t + 0.25);
-    }
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
 
-    playClick() {
-        if (!this._ok(this.lastClick, 30)) return;
-        this.lastClick = performance.now();
-        this._play(1200, 'sine', 0.06, 0.04);
-    }
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
 
-    playBack() {
-        if (!this._ok(0, 0)) return;
-        this._play(400, 'sine', 0.1, 0.04);
-    }
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(100, t);
+        osc.frequency.exponentialRampToValueAtTime(10, t + 0.3);
 
-    playSuccess() {
-        if (!this._ok(0, 0)) return;
+        gain.gain.setValueAtTime(0.1, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+
+        osc.start(t);
+        osc.stop(t + 0.3);
+    }
+    
+    // --- NEW SOUNDS ---
+    playTone(freq, type, duration, vol = 0.1) {
+        if (!this._ready()) return;
         const t = this.ctx.currentTime;
-        [520, 660, 780].forEach((f, i) => {
-            if (this.active >= this.max) return;
-            this.active++;
-            const o = this.ctx.createOscillator();
-            const g = this.ctx.createGain();
-            o.connect(g); g.connect(this.ctx.destination);
-            o.type = 'square';
-            o.frequency.setValueAtTime(f, t + i * 0.05);
-            g.gain.setValueAtTime(0.04, t + i * 0.05);
-            g.gain.exponentialRampToValueAtTime(0.001, t + i * 0.05 + 0.08);
-            o.onended = () => this.active--;
-            o.start(t + i * 0.05); o.stop(t + i * 0.05 + 0.08);
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, t);
+        gain.gain.setValueAtTime(vol, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + duration);
+        osc.start(t);
+        osc.stop(t + duration);
+    }
+
+    playUiClick() {
+        // High blip
+        this.playTone(1200, 'sine', 0.1, 0.05);
+    }
+
+    playUiBack() {
+        // Low blip
+        this.playTone(400, 'sine', 0.15, 0.05);
+    }
+
+    playShopSuccess() {
+        if (!this._ready()) return;
+        
+        const t = this.ctx.currentTime;
+        // C5, E5, G5
+        [523.25, 659.25, 783.99].forEach((freq, i) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(freq, t + i * 0.05);
+            gain.gain.setValueAtTime(0.05, t + i * 0.05);
+            gain.gain.exponentialRampToValueAtTime(0.001, t + i * 0.05 + 0.1);
+            osc.start(t + i * 0.05);
+            osc.stop(t + i * 0.05 + 0.1);
         });
     }
 
-    playError() {
-        if (!this._ok(0, 0)) return;
-        this._play(120, 'sawtooth', 0.15, 0.06);
+    playShopError() {
+        if (!this._ready()) return;
+        
+        const t = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(150, t);
+        osc.frequency.linearRampToValueAtTime(100, t + 0.2);
+        gain.gain.setValueAtTime(0.1, t);
+        gain.gain.linearRampToValueAtTime(0.0, t + 0.2);
+        osc.start(t);
+        osc.stop(t + 0.2);
+    }
+
+    playEquip() {
+        if (!this._ready()) return;
+        
+        const t = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(800, t);
+        osc.frequency.exponentialRampToValueAtTime(100, t + 0.1);
+        gain.gain.setValueAtTime(0.1, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+        osc.start(t);
+        osc.stop(t + 0.1);
+    }
+    
+    playBuy() {
+        this.playShopSuccess();
     }
 }
 
+/**
+ * КОНФИГУРАЦИЯ
+ */
 const CONFIG = {
+    // Remove logicalHeight as it is dynamic
     logicalWidth: 720,
-    gravity: 1900,
-    jumpForce: -620,
+    
+    // Physics (px/sec)
+    gravity: 1900,        
+    jumpForce: -620,       
     terminalVelocity: 1000,
+    
+    // Difficulty
     initialSpeed: 350,
-    speed: 350,
-    speedStep: 1.5,
+    speed: 350,          // Current Speed
+    speedIncreaseStep: 1.5,
     maxSpeed: 600,
-    gapSize: 220,
+    
+    // Balancing
+    gapSize: 220, 
     minPipeDistance: 480
 };
 
-const STATE = { START: 0, PLAYING: 1, PAUSED: 2, GAMEOVER: 3, SETTINGS: 4, SHOP: 5 };
+const STATE = {
+    START: 0,
+    PLAYING: 1,
+    PAUSED: 2,
+    GAMEOVER: 3,
+    SETTINGS: 4,
+    SHOP: 5
+};
 
+/**
+ * КЛАСС ИГРЫ
+ */
 class Game {
     constructor() {
         this.canvas = document.getElementById('gameCanvas');
         this.ctx = this.canvas.getContext('2d');
         this.wrapper = document.getElementById('game-wrapper');
+
+        // Initial setup - will be updated in resize
         this.canvas.width = CONFIG.logicalWidth;
-        this.canvas.height = 1280;
+        this.canvas.height = 1280; // Placeholder
 
         this.ui = {
             start: document.getElementById('start-screen'),
@@ -945,18 +1052,21 @@ class Game {
             btnLangRu: document.getElementById('btn-lang-ru')
         };
 
-        this.lang = new LanguageManager();
-        this.lang.updateButtons();
+        this.langManager = new LanguageManager();
+        this.langManager.updateButtons();
+
         this.sound = new SoundManager();
         this.state = STATE.START;
         
         this.lastTime = 0;
         this.score = 0;
-        this.highScore = parseInt(localStorage.getItem('cybercat_highscore')) || 0;
+        this.highScore = localStorage.getItem('cybercat_highscore') || 0;
         this.credits = parseInt(localStorage.getItem('cybercat_credits')) || 0;
         this.inventory = JSON.parse(localStorage.getItem('cybercat_inventory')) || [0];
+        
         this.hasRevived = false;
 
+        // SHOP STATE
         this.selectedSkinId = parseInt(localStorage.getItem('cybercat_skin')) || 0;
         this.browsingSkinIndex = this.selectedSkinId;
         this.shopCtx = this.ui.shopCanvas.getContext('2d');
@@ -964,100 +1074,208 @@ class Game {
         this.cat = new Cat(this);
         this.obstacles = [];
         this.background = new Background(this);
-        this.particles = [];
-        for (let i = 0; i < 25; i++) this.particles.push(new Particle());
+
+        this.particlePool = [];
+        for(let i=0; i<50; i++) {
+            this.particlePool.push(new Particle());
+            this.particlePool[i].active = false;
+        }
 
         this.initListeners();
         this.resize();
-        requestAnimationFrame(t => this.loop(t));
+        
+        requestAnimationFrame((t) => this.loop(t));
     }
 
     initListeners() {
         window.addEventListener('resize', () => this.resize());
         
-        const unlock = () => {
+        // --- AUDIO UNLOCKER ---
+        const unlockAudio = () => {
             this.sound.init();
-            this.sound.resume();
-            document.removeEventListener('pointerdown', unlock);
-            document.removeEventListener('keydown', unlock);
+            this.sound.resumeAudio();
+            document.removeEventListener('pointerdown', unlockAudio);
+            document.removeEventListener('keydown', unlockAudio);
         };
-        document.addEventListener('pointerdown', unlock);
-        document.addEventListener('keydown', unlock);
+        document.addEventListener('pointerdown', unlockAudio);
+        document.addEventListener('keydown', unlockAudio);
 
+        // --- AUDIO SUSPEND ON TAB HIDE (Rule Fix) ---
         document.addEventListener('visibilitychange', () => {
             if (document.hidden) {
-                this.sound.suspend();
-                if (this.state === STATE.PLAYING) this.togglePause();
+                // Игрок ушел со вкладки: Глушим звук и ставим паузу
+                this.sound.suspendAudio();
+                if (this.state === STATE.PLAYING) {
+                    this.togglePause();
+                }
             } else {
-                this.sound.resume();
+                // Игрок вернулся: Восстанавливаем звук
+                this.sound.resumeAudio();
             }
         });
 
-        this.ui.btnStart.onclick = e => { e.preventDefault(); this.sound.init(); this.sound.playClick(); this.startGame(); };
-        this.ui.btnRestart.onclick = e => { e.preventDefault(); this.sound.playClick(); this.showAdAndRestart(); };
-        this.ui.btnRevive.onclick = e => { e.preventDefault(); this.sound.playClick(); this.showReviveAd(); };
-        this.ui.btnResume.onclick = e => { e.preventDefault(); this.sound.playClick(); this.togglePause(); };
-        
-        this.ui.btnShopOpen.onclick = e => { e.preventDefault(); this.sound.playClick(); this.openShop(); };
-        this.ui.btnShopBack.onclick = e => { e.preventDefault(); this.sound.playBack(); this.closeShop(); };
-        this.ui.btnShopPrev.onclick = e => { e.preventDefault(); this.sound.playClick(); this.changeSkin(-1); };
-        this.ui.btnShopNext.onclick = e => { e.preventDefault(); this.sound.playClick(); this.changeSkin(1); };
-        this.ui.btnShopSelect.onclick = e => { e.preventDefault(); this.handleShopAction(); };
-        this.ui.btnShopFreeCredits.onclick = e => { e.preventDefault(); this.sound.playClick(); this.watchAdForCredits(); };
-
-        const menuHandler = e => {
+        const startAction = (e) => {
             e.preventDefault();
-            this.sound.playBack();
-            if (window.ysdk) {
-                this.sound.suspend();
-                window.ysdk.adv.showFullscreenAdv({
-                    callbacks: {
-                        onClose: () => { this.sound.resume(); this.exitToMenu(); },
-                        onError: () => { this.sound.resume(); this.exitToMenu(); }
-                    }
-                });
-            } else this.exitToMenu();
+            this.sound.init();
+            this.sound.playUiClick();
+            this.startGame();
         };
-        this.ui.btnPauseMenu.onclick = menuHandler;
-        this.ui.btnGameOverMenu.onclick = menuHandler;
-
-        this.ui.btnPause.onclick = e => { e.stopPropagation(); this.sound.playClick(); this.togglePause(); };
-        this.ui.btnSound.onclick = e => {
-            e.stopPropagation();
-            const m = this.sound.toggleMute();
-            if (!m) this.sound.playClick();
-            this.ui.btnSound.innerText = m ? '🔇' : '🔊';
-            this.ui.btnSound.classList.toggle('muted', m);
-        };
-
-        this.ui.btnSettingsOpen.onclick = e => { e.stopPropagation(); this.sound.playClick(); this.openSettings(); };
-        this.ui.btnSettingsBack.onclick = e => { e.stopPropagation(); this.sound.playBack(); this.closeSettings(); };
-        this.ui.btnLangEn.onclick = e => { e.stopPropagation(); this.sound.playClick(); this.lang.setLanguage('en'); this.updateShopUI(); };
-        this.ui.btnLangRu.onclick = e => { e.stopPropagation(); this.sound.playClick(); this.lang.setLanguage('ru'); this.updateShopUI(); };
-
-        this.wrapper.addEventListener('pointerdown', e => {
-            if (e.target.tagName === 'BUTTON') return;
-            if (this.state === STATE.PLAYING) this.cat.jump();
+        this.ui.btnStart.addEventListener('click', startAction);
+        
+        this.ui.btnRestart.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.sound.playUiClick();
+            this.showAdAndRestart();
         });
 
-        window.addEventListener('keydown', e => {
-            if ((e.code === 'Space' || e.code === 'ArrowUp') && this.state === STATE.PLAYING) this.cat.jump();
-            if (e.code === 'Escape' && (this.state === STATE.PLAYING || this.state === STATE.PAUSED)) this.togglePause();
+        this.ui.btnRevive.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.sound.playUiClick();
+            this.showReviveAd();
+        });
+
+        this.ui.btnResume.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.sound.playUiClick();
+            this.togglePause();
+        });
+
+        // SHOP LISTENERS
+        this.ui.btnShopOpen.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.sound.playUiClick();
+            this.openShop();
+        });
+        this.ui.btnShopBack.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.sound.playUiBack();
+            this.closeShop();
+        });
+        this.ui.btnShopPrev.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.sound.playUiClick();
+            this.changeBrowseSkin(-1);
+        });
+        this.ui.btnShopNext.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.sound.playUiClick();
+            this.changeBrowseSkin(1);
+        });
+        this.ui.btnShopSelect.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.handleShopAction();
+        });
+        this.ui.btnShopFreeCredits.addEventListener('click', (e) => {
+             e.preventDefault();
+             this.sound.playUiClick();
+             this.watchAdForCredits();
+        });
+
+        const menuHandler = (e) => {
+            e.preventDefault();
+            this.sound.playUiBack();
+            
+            // Show Ad before exit
+            if (window.ysdk) {
+                this.sound.suspendAudio();
+                window.ysdk.adv.showFullscreenAdv({
+                    callbacks: {
+                        onClose: (wasShown) => {
+                            this.sound.resumeAudio();
+                            this.exitToMenu();
+                        },
+                        onError: (error) => {
+                            this.sound.resumeAudio();
+                            this.exitToMenu();
+                        }
+                    }
+                });
+            } else {
+                this.exitToMenu();
+            }
+        };
+        this.ui.btnPauseMenu.addEventListener('click', menuHandler);
+        this.ui.btnGameOverMenu.addEventListener('click', menuHandler);
+
+        this.ui.btnPause.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.sound.playUiClick();
+            this.togglePause();
+        });
+
+        this.ui.btnSound.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isMuted = this.sound.toggleMute();
+            this.sound.playUiClick();
+            this.ui.btnSound.innerText = isMuted ? '🔇' : '🔊';
+            this.ui.btnSound.classList.toggle('muted', isMuted);
+        });
+
+        this.ui.btnSettingsOpen.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.sound.playUiClick();
+            this.openSettings();
+        });
+
+        this.ui.btnSettingsBack.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.sound.playUiBack();
+            this.closeSettings();
+        });
+
+        this.ui.btnLangEn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.sound.playUiClick();
+            this.langManager.setLanguage('en');
+            this.updateShopUI(); // Update texts if shop is open
+        });
+
+        this.ui.btnLangRu.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.sound.playUiClick();
+            this.langManager.setLanguage('ru');
+            this.updateShopUI();
+        });
+
+
+        this.wrapper.addEventListener('pointerdown', (e) => {
+            if (e.target.tagName === 'BUTTON') return;
+            if (this.state === STATE.PLAYING) {
+                this.cat.jump();
+            }
+        });
+
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' || e.code === 'ArrowUp') {
+                if (this.state === STATE.PLAYING) this.cat.jump();
+            }
+            if (e.code === 'Escape') {
+                if (this.state === STATE.PLAYING || this.state === STATE.PAUSED) {
+                    this.togglePause();
+                }
+            }
         });
     }
 
     spawnParticle(x, y) {
-        const p = this.particles.find(p => !p.active);
+        const p = this.particlePool.find(p => !p.active);
         if (p) p.activate(x, y, this.selectedSkinId);
     }
 
     resize() {
-        const w = window.innerWidth, h = window.innerHeight;
-        const ew = Math.min(w, h * 0.6);
+        const winW = window.innerWidth;
+        const winH = window.innerHeight;
+        // Use a safe aspect ratio, constrained by CSS max-width which is 60vh ~ 0.6 aspect
+        // But for internal calculation, we want to map full height.
+        // effectiveWidth is how wide the game LOOKS. 
+        const effectiveWidth = Math.min(winW, winH * 0.6); 
+        const aspect = effectiveWidth / winH;
+        
         this.canvas.width = CONFIG.logicalWidth;
-        this.canvas.height = CONFIG.logicalWidth / (ew / h);
+        this.canvas.height = CONFIG.logicalWidth / aspect;
     }
 
+    /* --- SHOP LOGIC --- */
     openShop() {
         this.state = STATE.SHOP;
         this.browsingSkinIndex = this.selectedSkinId;
@@ -1071,179 +1289,268 @@ class Game {
         this.state = STATE.START;
         this.ui.shop.classList.add('hidden');
         this.ui.start.classList.remove('hidden');
-        this.ui.btnSettingsOpen.style.display = 'flex';
+        this.ui.btnSettingsOpen.style.display = 'block';
     }
 
-    changeSkin(d) {
-        this.browsingSkinIndex = (this.browsingSkinIndex + d + SKINS.length) % SKINS.length;
+    changeBrowseSkin(delta) {
+        let newIndex = this.browsingSkinIndex + delta;
+        if (newIndex < 0) newIndex = SKINS.length - 1;
+        if (newIndex >= SKINS.length) newIndex = 0;
+        this.browsingSkinIndex = newIndex;
         this.updateShopUI();
     }
 
     handleShopAction() {
         const skin = SKINS[this.browsingSkinIndex];
-        const owned = this.inventory.includes(skin.id);
+        const isOwned = this.inventory.includes(skin.id);
 
-        if (owned) {
+        if (isOwned) {
+            // Select logic
             this.selectedSkinId = this.browsingSkinIndex;
             localStorage.setItem('cybercat_skin', this.selectedSkinId);
             this.cat.updateSkin();
-            this.sound.playSuccess();
-        } else if (this.credits >= skin.price) {
-            this.credits -= skin.price;
-            this.inventory.push(skin.id);
-            this.selectedSkinId = skin.id;
-            localStorage.setItem('cybercat_credits', this.credits);
-            localStorage.setItem('cybercat_inventory', JSON.stringify(this.inventory));
-            localStorage.setItem('cybercat_skin', this.selectedSkinId);
-            this.cat.updateSkin();
-            this.sound.playSuccess();
+            this.sound.playEquip(); // Play equip sound
+            this.updateShopUI();
         } else {
-            this.sound.playError();
+            // Buy logic
+            if (this.credits >= skin.price) {
+                this.credits -= skin.price;
+                this.inventory.push(skin.id);
+                this.selectedSkinId = skin.id; // Auto select on buy
+                
+                // Save data
+                localStorage.setItem('cybercat_credits', this.credits);
+                localStorage.setItem('cybercat_inventory', JSON.stringify(this.inventory));
+                localStorage.setItem('cybercat_skin', this.selectedSkinId);
+                
+                this.sound.playShopSuccess(); // Play success sound
+                this.cat.updateSkin();
+                this.updateShopUI();
+            } else {
+                // Not enough money
+                this.sound.playShopError(); // Play error sound
+                this.ui.btnShopSelect.classList.add('btn-locked');
+                setTimeout(() => {
+                    this.updateShopUI(); // reset style
+                }, 300);
+            }
         }
-        this.updateShopUI();
     }
     
     watchAdForCredits() {
-        let rewarded = false;
-        const finish = () => {
-            this.sound.resume();
-            if (rewarded) {
-                this.credits += 100;
-                localStorage.setItem('cybercat_credits', this.credits);
-                this.sound.playSuccess();
-                this.updateShopUI();
+        let rewardGranted = false;
+        const finishAd = () => {
+            this.sound.resumeAudio();
+            if (rewardGranted) {
+                 this.credits += 100;
+                 localStorage.setItem('cybercat_credits', this.credits);
+                 this.sound.playShopSuccess();
+                 this.updateShopUI();
             }
         };
 
         if (window.ysdk) {
-            this.sound.suspend();
+            this.sound.suspendAudio();
             window.ysdk.adv.showRewardedVideo({
-                callbacks: { onRewarded: () => { rewarded = true; }, onClose: finish, onError: finish }
+                callbacks: {
+                    onOpen: () => {},
+                    onRewarded: () => { rewardGranted = true; },
+                    onClose: () => { finishAd(); },
+                    onError: (e) => { finishAd(); }
+                }
             });
-        } else { rewarded = true; finish(); }
+        } else {
+            // Mock for testing
+            rewardGranted = true;
+            finishAd();
+        }
     }
 
     updateShopUI() {
         const skin = SKINS[this.browsingSkinIndex];
-        this.ui.shopSkinName.innerText = this.lang.get(skin.nameKey);
-        this.ui.shopCredits.innerText = `${this.lang.get('credits')}: ${this.credits}`;
-        this.ui.btnShopFreeCredits.innerHTML = this.lang.get('free_credits');
+        this.ui.shopSkinName.innerText = this.langManager.get(skin.nameKey);
+        this.ui.shopCredits.innerText = `${this.langManager.get('credits')}: ${this.credits}`;
+        this.ui.btnShopFreeCredits.innerText = this.langManager.get('free_credits');
         
-        document.getElementById('txt-shop-title').innerText = this.lang.get('shop_title');
+        // Update Title via Language Manager to ensure correct language
+        const shopTitle = document.getElementById('txt-shop-title');
+        if (shopTitle) shopTitle.innerText = this.langManager.get('shop_title');
 
-        const owned = this.inventory.includes(skin.id);
-        const selected = this.selectedSkinId === skin.id;
-        const btn = this.ui.btnShopSelect;
+        const isOwned = this.inventory.includes(skin.id);
+        const isSelected = this.selectedSkinId === skin.id;
 
-        btn.classList.remove('btn-disabled', 'btn-warning', 'btn-success', 'btn-danger');
+        // Reset Styles
+        this.ui.btnShopSelect.classList.remove('btn-equipped', 'btn-buy', 'btn-locked');
+        this.ui.btnShopSelect.style.borderColor = "";
 
-        if (owned) {
-            if (selected) {
-                btn.innerText = this.lang.get('selected');
-                btn.classList.add('btn-disabled');
+        if (isOwned) {
+            if (isSelected) {
+                this.ui.btnShopSelect.innerText = this.langManager.get('selected');
+                this.ui.btnShopSelect.classList.add('btn-equipped');
             } else {
-                btn.innerText = this.lang.get('select');
-                btn.classList.add('btn-success');
+                this.ui.btnShopSelect.innerText = this.langManager.get('select');
             }
         } else {
-            btn.innerText = `${this.lang.get('buy')} (${skin.price})`;
-            btn.classList.add(this.credits >= skin.price ? 'btn-warning' : 'btn-danger');
+            this.ui.btnShopSelect.innerText = `${this.langManager.get('buy')} (${skin.price})`;
+            if (this.credits >= skin.price) {
+                this.ui.btnShopSelect.classList.add('btn-buy');
+            } else {
+                this.ui.btnShopSelect.classList.add('btn-locked');
+            }
         }
-        
-        this.drawShopPreview();
     }
 
     drawShopPreview() {
         const ctx = this.shopCtx;
-        const cw = this.ui.shopCanvas.width, ch = this.ui.shopCanvas.height;
-        ctx.clearRect(0, 0, cw, ch);
-        ctx.fillStyle = "#0a0a0a";
-        ctx.fillRect(0, 0, cw, ch);
+        ctx.clearRect(0, 0, 160, 160);
+        
+        // Background glow
+        const skin = SKINS[this.browsingSkinIndex];
         ctx.save();
-        ctx.translate(cw / 2, ch / 2);
-        drawCatVisuals(ctx, 45, 36, this.browsingSkinIndex, null);
+        ctx.fillStyle = "#111";
+        ctx.fillRect(0,0,160,160);
+        
+        // Draw Cat in Center
+        ctx.translate(80, 80);
+        
+        // Use Global Draw Function
+        drawCatVisuals(ctx, 50, 40, this.browsingSkinIndex, null); 
+
         ctx.restore();
     }
 
     openSettings() {
-        this.prevState = this.state === STATE.PAUSED ? STATE.PAUSED : STATE.START;
+        if (this.state === STATE.START) {
+            this.previousState = STATE.START;
+        } else if (this.state === STATE.PAUSED) {
+            this.previousState = STATE.PAUSED;
+        } else {
+            this.previousState = STATE.START; 
+        }
+
         this.state = STATE.SETTINGS;
+        
         this.ui.start.classList.add('hidden');
         this.ui.pause.classList.add('hidden');
+        this.ui.gameover.classList.add('hidden');
+        
         this.ui.settings.classList.remove('hidden');
         this.ui.btnSettingsOpen.style.display = 'none';
         this.ui.btnPause.style.display = 'none';
     }
 
     closeSettings() {
-        this.state = this.prevState;
-        this.ui.settings.classList.add('hidden');
-        if (this.state === STATE.START) {
-            this.ui.start.classList.remove('hidden');
-            this.ui.btnSettingsOpen.style.display = 'flex';
-        } else if (this.state === STATE.PAUSED) {
-            this.ui.pause.classList.remove('hidden');
+        if (this.state === STATE.SETTINGS) {
+            this.state = this.previousState;
+            this.ui.settings.classList.add('hidden');
+            
+            if (this.state === STATE.START) {
+                this.ui.start.classList.remove('hidden');
+                this.ui.btnSettingsOpen.style.display = 'block';
+            } else if (this.state === STATE.PAUSED) {
+                this.ui.pause.classList.remove('hidden');
+            }
         }
     }
 
     exitToMenu() {
         this.state = STATE.START;
-        ['settings', 'pause', 'gameover', 'hud'].forEach(k => this.ui[k].classList.add('hidden'));
+        
+        this.ui.settings.classList.add('hidden');
+        this.ui.pause.classList.add('hidden');
+        this.ui.gameover.classList.add('hidden');
+        this.ui.hud.classList.add('hidden');
+        
         this.ui.start.classList.remove('hidden');
-        this.ui.btnSettingsOpen.style.display = 'flex';
+        this.ui.btnSettingsOpen.style.display = 'block';
         this.ui.btnPause.style.display = 'none';
+
         this.cat.reset();
         this.obstacles = [];
-        this.particles.forEach(p => p.active = false);
+        this.particlePool.forEach(p => p.active = false);
         this.score = 0;
         CONFIG.speed = CONFIG.initialSpeed;
         this.hasRevived = false;
+        
         this.lastTime = performance.now();
     }
 
     startGame() {
         this.state = STATE.PLAYING;
         this.ui.start.classList.add('hidden');
+        this.ui.settings.classList.add('hidden');
         this.ui.hud.classList.remove('hidden');
         this.ui.btnPause.style.display = 'flex';
         this.ui.btnSettingsOpen.style.display = 'none';
+        
         CONFIG.speed = CONFIG.initialSpeed;
         this.hasRevived = false;
-        this.cat.updateSkin();
-        this.cat.reset();
+        
+        this.cat.updateSkin(); // Ensure correct skin on start
+        this.cat.reset(); 
         this.cat.jump();
         this.score = 0;
-        this.ui.score.innerText = '0';
+        this.updateScoreUI();
         this.lastTime = performance.now();
     }
 
     showAdAndRestart() {
-        const finish = () => { this.sound.resume(); this.resetGame(); };
+        const finishAd = () => {
+            this.sound.resumeAudio();
+            this.resetGame();
+        };
+
         if (window.ysdk) {
-            this.sound.suspend();
-            window.ysdk.adv.showFullscreenAdv({ callbacks: { onClose: finish, onError: finish } });
-        } else finish();
+            this.sound.suspendAudio();
+            window.ysdk.adv.showFullscreenAdv({
+                callbacks: {
+                    onClose: function(wasShown) { finishAd(); },
+                    onError: function(error) { finishAd(); }
+                }
+            });
+        } else {
+            finishAd();
+        }
     }
 
     showReviveAd() {
-        let rewarded = false;
-        const finish = () => { this.sound.resume(); if (rewarded) this.reviveHero(); };
+        let rewardGranted = false;
+        const finishRevive = () => {
+            this.sound.resumeAudio();
+            if (rewardGranted) {
+                this.reviveHero();
+            }
+        };
+
         if (window.ysdk) {
-            this.sound.suspend();
-            window.ysdk.adv.showRewardedVideo({ callbacks: { onRewarded: () => { rewarded = true; }, onClose: finish, onError: finish } });
-        } else { rewarded = true; finish(); }
+            this.sound.suspendAudio();
+            window.ysdk.adv.showRewardedVideo({
+                callbacks: {
+                    onOpen: () => { console.log('Video ad open.'); },
+                    onRewarded: () => { rewardGranted = true; },
+                    onClose: () => { finishRevive(); },
+                    onError: (e) => { finishRevive(); }
+                }
+            });
+        } else {
+            rewardGranted = true; 
+            finishRevive();
+        }
     }
 
     reviveHero() {
         this.hasRevived = true;
         this.state = STATE.PLAYING;
+        
         this.ui.gameover.classList.add('hidden');
         this.ui.hud.classList.remove('hidden');
         this.ui.btnPause.style.display = 'flex';
+
         this.cat.y = this.canvas.height / 2;
         this.cat.velocity = 0;
         this.cat.rotation = 0;
         this.obstacles = [];
+
         this.lastTime = performance.now();
         this.cat.jump();
     }
@@ -1251,16 +1558,18 @@ class Game {
     resetGame() {
         this.cat = new Cat(this);
         this.obstacles = [];
-        this.particles.forEach(p => p.active = false);
+        this.particlePool.forEach(p => p.active = false);
         this.score = 0;
         this.hasRevived = false;
+        
         CONFIG.speed = CONFIG.initialSpeed;
+        
         this.state = STATE.PLAYING;
         this.ui.gameover.classList.add('hidden');
         this.ui.hud.classList.remove('hidden');
         this.ui.btnPause.style.display = 'flex';
         this.cat.jump();
-        this.ui.score.innerText = '0';
+        this.updateScoreUI();
         this.lastTime = performance.now();
     }
 
@@ -1280,72 +1589,116 @@ class Game {
     gameOver() {
         this.ui.gameover.classList.remove('hidden');
         this.state = STATE.GAMEOVER;
-        this.sound.playCrash();
+        
+        try {
+            this.sound.playCrash();
+        } catch (e) {
+            console.error('Audio play failed', e);
+        }
+        
+        // Economy Logic
         this.credits += this.score;
         localStorage.setItem('cybercat_credits', this.credits);
+        
         if (this.score > this.highScore) {
             this.highScore = this.score;
             localStorage.setItem('cybercat_highscore', this.highScore);
         }
+
         this.ui.hud.classList.add('hidden');
         this.ui.btnPause.style.display = 'none';
         this.ui.finalScore.innerText = this.score;
         this.ui.bestScore.innerText = this.highScore;
-        this.ui.btnRevive.style.display = this.hasRevived ? 'none' : 'block';
+
+        if (!this.hasRevived) {
+            this.ui.btnRevive.style.display = 'flex';
+        } else {
+            this.ui.btnRevive.style.display = 'none';
+        }
     }
 
-    loop(ts) {
-        if (!this.lastTime) this.lastTime = ts;
-        let dt = (ts - this.lastTime) / 1000;
-        this.lastTime = ts;
-        if (dt > 0.1) dt = 0.1;
+    updateScoreUI() {
+        this.ui.score.innerText = this.score;
+    }
+
+    loop(timestamp) {
+        if (!this.lastTime) this.lastTime = timestamp;
+        const dt = (timestamp - this.lastTime) / 1000;
+        this.lastTime = timestamp;
 
         this.update(dt);
         this.draw();
-        requestAnimationFrame(t => this.loop(t));
+        
+        requestAnimationFrame((t) => this.loop(t));
     }
 
     update(dt) {
-        if (this.state === STATE.SHOP || this.state === STATE.PAUSED || this.state === STATE.SETTINGS) return;
+        // Animation for shop
+        if (this.state === STATE.SHOP) {
+            this.drawShopPreview();
+            return;
+        }
+
+        if (this.state === STATE.PAUSED || this.state === STATE.SETTINGS) return;
+        if (dt > 0.1) dt = 0.1;
 
         this.background.update(dt);
-        for (let p of this.particles) if (p.active) p.update(dt);
+        this.particlePool.forEach(p => p.update(dt));
 
         if (this.state === STATE.PLAYING) {
             this.cat.update(dt);
             
-            const sr = (CONFIG.speed - CONFIG.initialSpeed) / (CONFIG.maxSpeed - CONFIG.initialSpeed);
-            const minDist = CONFIG.minPipeDistance - sr * 50;
+            const speedRatio = (CONFIG.speed - CONFIG.initialSpeed) / (CONFIG.maxSpeed - CONFIG.initialSpeed);
+            const dynamicMinDistance = CONFIG.minPipeDistance - (speedRatio * 50);
 
-            if (!this.obstacles.length) {
+            if (this.obstacles.length === 0) {
                 this.obstacles.push(new Obstacle(this));
             } else {
-                const last = this.obstacles[this.obstacles.length - 1];
-                if (CONFIG.logicalWidth - last.x >= minDist) this.obstacles.push(new Obstacle(this, last));
+                const lastObs = this.obstacles[this.obstacles.length - 1];
+                if (CONFIG.logicalWidth - lastObs.x >= dynamicMinDistance) {
+                    this.obstacles.push(new Obstacle(this, lastObs));
+                }
             }
 
-            const px = this.cat.w * 0.2, py = this.cat.h * 0.2;
-            const cl = this.cat.x + px, cr = this.cat.x + this.cat.w - px;
-            const ct = this.cat.y + py, cb = this.cat.y + this.cat.h - py;
+            const hitPaddingX = this.cat.w * 0.2;
+            const hitPaddingY = this.cat.h * 0.2;
+            
+            const catHitL = this.cat.x + hitPaddingX;
+            const catHitR = this.cat.x + this.cat.w - hitPaddingX;
+            const catHitT = this.cat.y + hitPaddingY;
+            const catHitB = this.cat.y + this.cat.h - hitPaddingY;
 
             for (let i = this.obstacles.length - 1; i >= 0; i--) {
-                const o = this.obstacles[i];
-                o.update(dt);
+                const obs = this.obstacles[i];
+                obs.update(dt);
                 
-                if (!o.passed && this.cat.x > o.x + o.w) {
-                    o.passed = true;
+                if (!obs.passed && this.cat.x > obs.x + obs.w) {
+                    obs.passed = true;
                     this.score++;
-                    this.ui.score.innerText = this.score;
+                    this.updateScoreUI();
                     this.sound.playScore();
-                    CONFIG.speed = Math.min(CONFIG.maxSpeed, CONFIG.speed + CONFIG.speedStep);
+                    
+                    CONFIG.speed = Math.min(CONFIG.maxSpeed, CONFIG.speed + CONFIG.speedIncreaseStep);
                 }
 
-                if (o.x + o.w < 0) { this.obstacles.splice(i, 1); continue; }
+                if (obs.x + obs.w < 0) {
+                    this.obstacles.splice(i, 1);
+                    continue;
+                }
 
-                if (cr > o.x && cl < o.x + o.w && (ct < o.topH || cb > o.bottomY)) this.gameOver();
+                if (
+                    catHitR > obs.x &&
+                    catHitL < obs.x + obs.w &&
+                    (catHitT < obs.topHeight || catHitB > obs.bottomY)
+                ) {
+                    this.gameOver();
+                }
             }
 
-            if (this.cat.y + this.cat.h >= this.canvas.height || this.cat.y <= 0) this.gameOver();
+            if (this.cat.y + this.cat.h >= this.canvas.height || this.cat.y <= 0) {
+                this.gameOver();
+            }
+
         } else if (this.state === STATE.GAMEOVER) {
             if (this.cat.y + this.cat.h < this.canvas.height) {
                 this.cat.velocity += CONFIG.gravity * dt;
@@ -1355,92 +1708,150 @@ class Game {
     }
 
     draw() {
+        // Skip main draw if in shop
         if (this.state === STATE.SHOP) return;
-        const c = this.ctx;
-        c.fillStyle = "#0d001a";
-        c.fillRect(0, 0, this.canvas.width, this.canvas.height);
-        this.background.draw(c);
-        for (let o of this.obstacles) o.draw(c);
-        for (let p of this.particles) if (p.active) p.draw(c);
-        this.cat.draw(c);
+
+        this.ctx.fillStyle = "#0d001a";
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+        this.background.draw(this.ctx);
+        this.obstacles.forEach(obs => obs.draw(this.ctx));
+        this.particlePool.forEach(p => p.draw(this.ctx));
+        this.cat.draw(this.ctx);
+
         if (this.state === STATE.PAUSED || this.state === STATE.SETTINGS) {
-            c.fillStyle = "rgba(0,0,0,0.4)";
-            c.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            this.ctx.fillStyle = "rgba(0,0,0,0.3)";
+            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
         }
     }
 }
 
-function drawCatVisuals(ctx, w, h, skinId, vel) {
+/**
+ * VISUAL HELPER FUNCTION (Global)
+ */
+function drawCatVisuals(ctx, w, h, skinId, velocity) {
     const skin = SKINS[skinId];
-    let fill = skin.bodyColor || "#000";
-    let stroke = skin.color;
     
-    if (skinId === 4) {
-        const g = ctx.createLinearGradient(-w/2, -h/2, w/2, h/2);
-        g.addColorStop(0, "#FFD700");
-        g.addColorStop(1, "#FFA500");
-        fill = g;
-        stroke = "#FFA500";
+    // --- SETUP STYLES ---
+    let fillColor = "#000";
+    let strokeColor = skin.color;
+    
+    if (skinId === 2) { // PHANTOM
+        fillColor = "#ffffff";
+        strokeColor = "#00FFFF"; // Explicit Cyan stroke
+    } else if (skinId === 4) { // MIDAS
+        let grd = ctx.createLinearGradient(-w/2, -h/2, w/2, h/2);
+        grd.addColorStop(0, "#FFD700"); 
+        grd.addColorStop(1, "#FFA500"); 
+        fillColor = grd;
+        strokeColor = "#FFA500";
+    } else if (skinId === 3) { // INFERNO
+        fillColor = "#110000";
+    } else if (skinId === 1) { // PLASMA
+        fillColor = "#1a001a";
     }
+    
+    // Override if specific body color exists in config (mostly for fallback)
+    if (skin.bodyColor && skinId !== 4) fillColor = skin.bodyColor;
 
-    if (vel === null || vel < 0) {
-        const len = 18 + Math.random() * 12;
-        ctx.fillStyle = skin.flame;
-        ctx.shadowBlur = 12;
-        ctx.shadowColor = skin.flame;
+    // --- LAYER 1: JETPACK & FLAME ---
+    // Flame (behind jetpack)
+    if (velocity < 0 || velocity === null) {
+        const flameLength = 20 + Math.random() * 15;
+        let flameColor = skin.flame;
+        
+        if (velocity !== null && CONFIG.speed > 500) {
+             flameColor = Math.random() > 0.5 ? "#FFFFFF" : flameColor; 
+        }
+        
+        ctx.fillStyle = flameColor;
+        ctx.shadowBlur = 20;
+        ctx.shadowColor = flameColor;
+        
         ctx.beginPath();
-        ctx.moveTo(-w/2 - 8, -4);
-        ctx.lineTo(-w/2 - 8 - len, 4);
-        ctx.lineTo(-w/2 - 8, 12);
+        ctx.moveTo(-w/2 - 10, -5); 
+        ctx.lineTo(-w/2 - 10 - flameLength, 5);
+        ctx.lineTo(-w/2 - 10, 15);
         ctx.fill();
-        ctx.shadowBlur = 0;
+        ctx.shadowBlur = 0; 
     }
 
+    // Jetpack Body
     ctx.fillStyle = skin.jetpackColor || '#555';
-    ctx.fillRect(-w/2 - 8, -4, 8, 16);
+    ctx.fillRect(-w/2 - 10, -5, 10, 20);
 
-    ctx.shadowBlur = skinId === 4 ? 18 : 10;
+    // --- LAYER 3: BODY ---
+    ctx.shadowBlur = (skinId === 4 || skinId === 2) ? 25 : 15; 
     ctx.shadowColor = skin.color;
-    ctx.strokeStyle = stroke;
-    ctx.lineWidth = 2.5;
-    ctx.fillStyle = fill;
+    if (skinId === 4) ctx.shadowColor = "#FFD700";
+    
+    ctx.strokeStyle = strokeColor;
+    ctx.lineWidth = 3;
+    ctx.fillStyle = fillColor;
+
     ctx.fillRect(-w/2, -h/2, w, h);
     ctx.strokeRect(-w/2, -h/2, w, h);
 
+    // --- LAYER 4: EARS (Logic) ---
+    // If Midas (4) -> Skip ears (draw crown later)
     if (skinId !== 4) {
         ctx.lineWidth = 2;
-        ctx.strokeStyle = stroke;
+        ctx.strokeStyle = strokeColor; 
+        
+        // Standard ear height is -15, Neon Cat (1) gets slightly taller ears (-16 instead of -17)
+        let yTop = (skinId === 1) ? -16 : -15;
+
         ctx.beginPath();
-        ctx.moveTo(-8, -h/2); ctx.lineTo(-16, -h/2 - 12); ctx.lineTo(0, -h/2);
-        ctx.moveTo(4, -h/2); ctx.lineTo(12, -h/2 - 12); ctx.lineTo(20, -h/2);
+        // Left Ear
+        ctx.moveTo(-10, -h/2);
+        ctx.lineTo(-20, -h/2 + yTop); 
+        ctx.lineTo(0, -h/2);
+        // Right Ear
+        ctx.moveTo(5, -h/2);
+        ctx.lineTo(15, -h/2 + yTop);
+        ctx.lineTo(25, -h/2);
         ctx.stroke();
     }
 
-    ctx.shadowBlur = 0;
+    // --- LAYER 5: EYE ---
+    ctx.shadowBlur = 0; // Ensure clean eye rendering
     ctx.fillStyle = skin.eyeColor;
-    ctx.fillRect(6, -10, 7, 7);
+    ctx.fillRect(8, -12, 8, 8);
 
-    if (skinId === 3) {
-        ctx.strokeStyle = "#000";
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(4, -14);
-        ctx.lineTo(15, -8);
-        ctx.stroke();
-    } else if (skinId === 4) {
-        ctx.strokeStyle = "#FFD700";
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(-8, -h/2);
-        ctx.lineTo(-12, -h/2 - 12);
-        ctx.lineTo(-4, -h/2 - 4);
-        ctx.lineTo(0, -h/2 - 16);
-        ctx.lineTo(4, -h/2 - 4);
-        ctx.lineTo(12, -h/2 - 12);
-        ctx.lineTo(8, -h/2);
-        ctx.stroke();
+    // --- LAYER 6: UNIQUE DETAILS ---
+    switch (skinId) {
+        case 3: // INFERNO - Angry Brow
+             ctx.strokeStyle = "#000"; // Dark angry brow
+             ctx.lineWidth = 2;
+             ctx.beginPath();
+             ctx.moveTo(6, -16);
+             ctx.lineTo(18, -10);
+             ctx.stroke();
+             break;
+
+        case 4: // MIDAS - Crown
+             ctx.strokeStyle = "#FFD700";
+             ctx.lineWidth = 2;
+             ctx.beginPath();
+             // Crown overlay
+             ctx.moveTo(-10, -h/2);
+             ctx.lineTo(-15, -h/2 - 15);
+             ctx.lineTo(-5, -h/2 - 5);
+             ctx.lineTo(0, -h/2 - 20); // Center peak
+             ctx.lineTo(5, -h/2 - 5);
+             ctx.lineTo(15, -h/2 - 15);
+             ctx.lineTo(10, -h/2);
+             ctx.stroke();
+             break;
+        
+        default:
+             break;
     }
+    
+    ctx.shadowBlur = 0;
 }
+
+/* --- СУЩНОСТИ --- */
 
 class Cat {
     constructor(game) {
@@ -1451,7 +1862,9 @@ class Cat {
         this.reset();
     }
 
-    updateSkin() { this.skin = SKINS[this.game.selectedSkinId]; }
+    updateSkin() {
+        this.skin = SKINS[this.game.selectedSkinId];
+    }
 
     reset() {
         this.x = this.game.canvas.width / 2 - 100;
@@ -1463,169 +1876,298 @@ class Cat {
 
     jump() {
         this.velocity = CONFIG.jumpForce;
-        this.rotation = -20;
+        this.rotation = -20; 
+        
         this.game.sound.playJump();
-        for (let i = 0; i < 3; i++) this.game.spawnParticle(this.x, this.y + this.h / 2);
+        for(let i=0; i<5; i++) {
+            // --- OPTIMIZATION: USE POOL ---
+            this.game.spawnParticle(this.x, this.y + this.h/2);
+        }
     }
 
     update(dt) {
         this.velocity += CONFIG.gravity * dt;
-        if (this.velocity > CONFIG.terminalVelocity) this.velocity = CONFIG.terminalVelocity;
+        
+        if (this.velocity > CONFIG.terminalVelocity) {
+            this.velocity = CONFIG.terminalVelocity;
+        }
+
         this.y += this.velocity * dt;
-        this.rotation = this.velocity < 0 ? Math.max(-20, this.rotation - 600 * dt) : Math.min(45, this.rotation + 200 * dt);
+
+        if (this.velocity < 0) {
+            this.rotation = Math.max(-20, this.rotation - 600 * dt);
+        } else {
+            this.rotation = Math.min(45, this.rotation + 200 * dt);
+        }
+
         this.timer += dt;
-        if (this.timer > 0.08) {
-            this.game.spawnParticle(this.x, this.y + this.h / 2 + 5);
+        if (this.timer > 0.05) { 
+            // --- OPTIMIZATION: USE POOL ---
+            this.game.spawnParticle(this.x, this.y + this.h/2 + 5);
             this.timer = 0;
         }
     }
 
     draw(ctx) {
         ctx.save();
-        ctx.translate(~~(this.x + this.w / 2), ~~(this.y + this.h / 2));
+        // --- OPTIMIZATION: ROUND COORDS ---
+        ctx.translate(~~(this.x + this.w/2), ~~(this.y + this.h/2));
         ctx.rotate(this.rotation * Math.PI / 180);
+
+        // Call helper to draw the correct skin
         drawCatVisuals(ctx, this.w, this.h, this.skin.id, this.velocity);
+
         ctx.restore();
     }
 }
 
 class Obstacle {
-    constructor(game, last = null) {
+    constructor(game, lastObstacle = null) {
         this.game = game;
         this.w = 70;
         this.x = game.canvas.width;
         this.passed = false;
-        const minH = 150;
-        const maxT = game.canvas.height - CONFIG.gapSize - minH;
-        let minS = minH, maxS = maxT;
-        if (last) {
-            const d = 400;
-            minS = Math.max(minH, last.topH - d);
-            maxS = Math.min(maxT, last.topH + d);
+        
+        const minHeight = 150;
+        // USE DYNAMIC HEIGHT
+        const maxTop = game.canvas.height - CONFIG.gapSize - minHeight;
+        
+        // --- LOGIC FIX: IMPOSSIBLE JUMPS ---
+        let minSafe = minHeight;
+        let maxSafe = maxTop;
+
+        if (lastObstacle) {
+            // Max height change allowed based on physics approximation
+            const maxDelta = 400; 
+            
+            minSafe = Math.max(minHeight, lastObstacle.topHeight - maxDelta);
+            maxSafe = Math.min(maxTop, lastObstacle.topHeight + maxDelta);
         }
-        this.topH = Math.floor(Math.random() * (maxS - minS + 1) + minS);
-        this.bottomY = this.topH + CONFIG.gapSize;
+
+        this.topHeight = Math.floor(Math.random() * (maxSafe - minSafe + 1) + minSafe);
+        this.bottomY = this.topHeight + CONFIG.gapSize;
     }
     
-    update(dt) { this.x -= CONFIG.speed * dt; }
+    update(dt) { 
+        this.x -= CONFIG.speed * dt; 
+    }
     
     draw(ctx) {
-        const x = ~~this.x, w = this.w, th = ~~this.topH, by = ~~this.bottomY;
-        const gh = this.game.canvas.height - this.bottomY;
+        // --- OPTIMIZATION: NO BLUR, FAKE GLOW, ROUND COORDS ---
+        const x = ~~this.x;
+        const w = ~~this.w;
+        const th = ~~this.topHeight;
+        const by = ~~this.bottomY;
+        const gh = ~~(this.game.canvas.height - this.bottomY);
 
-        ctx.lineWidth = 12;
-        ctx.strokeStyle = "rgba(0,255,0,0.2)";
-        ctx.strokeRect(x, -5, w, th + 5);
-        ctx.strokeRect(x, by, w, gh + 5);
+        // Fake Glow (Double Stroke)
+        ctx.lineWidth = 20;
+        ctx.strokeStyle = "rgba(0, 255, 0, 0.3)";
+        
+        // Top Pipe Glow
+        ctx.beginPath();
+        ctx.rect(x, -5, w, th + 5);
+        ctx.stroke();
 
+        // Bottom Pipe Glow
+        ctx.beginPath();
+        ctx.rect(x, by, w, gh + 5);
+        ctx.stroke();
+
+        // Main Body
         ctx.fillStyle = "#001a00";
         ctx.strokeStyle = "#0f0";
-        ctx.lineWidth = 3;
+        ctx.lineWidth = 4;
+        
+        // Top Pipe
         ctx.fillRect(x, 0, w, th);
         ctx.strokeRect(x, -5, w, th + 5);
-        ctx.fillStyle = "#0f0";
-        ctx.fillRect(x + 10, th - 35, w - 20, 8);
         
+        // Top Pipe Cap
+        ctx.fillStyle = "#0f0";
+        ctx.fillRect(x + 10, th - 40, w - 20, 10);
+        
+        // Bottom Pipe
         ctx.fillStyle = "#001a00";
         ctx.fillRect(x, by, w, gh);
         ctx.strokeRect(x, by, w, gh + 5);
+        
+        // Bottom Pipe Cap
         ctx.fillStyle = "#0f0";
-        ctx.fillRect(x + 10, by + 27, w - 20, 8);
+        ctx.fillRect(x + 10, by + 30, w - 20, 10);
     }
 }
 
 class Particle {
-    constructor() { this.active = false; }
+    constructor() {
+        this.active = false;
+    }
 
     activate(x, y, skinId) {
         this.x = x;
         this.y = y;
-        this.life = 1;
-        this.size = 3 + Math.random() * 4;
-        this.vx = -150 - Math.random() * 100;
-        this.vy = (Math.random() - 0.5) * 150;
-        this.color = SKINS[skinId].flame;
+        this.skinId = skinId;
+        this.life = 1.0;
+        this.size = Math.random() * 8 + 4;
+        
+        // Default physics
+        this.vx = (Math.random() - 0.5) * 300 - 300; 
+        this.vy = (Math.random() - 0.5) * 300;
+        this.decay = 2.5;
+
+        // Customization based on Skin
+        switch (skinId) {
+            case 1: // PLASMA
+                this.color = Math.random() > 0.5 ? "#ff00ff" : "#ffccff";
+                this.shape = 'square';
+                break;
+            case 2: // PHANTOM
+                this.color = Math.random() > 0.5 ? "#00ffff" : "#e0ffff";
+                this.shape = 'rect';
+                break;
+            case 3: // INFERNO
+                this.color = Math.random() > 0.5 ? "#FF4500" : "#FFFF00";
+                this.shape = 'rect';
+                this.size = Math.random() * 6 + 2; 
+                this.decay = 3.0; 
+                break;
+            case 4: // MIDAS
+                this.color = Math.random() > 0.5 ? "#ffd700" : "#ffffff";
+                this.shape = 'circle';
+                this.decay = 2.0;
+                break;
+            case 0: 
+            default:
+                this.color = Math.random() > 0.5 ? "#00ffff" : "#0099ff";
+                this.shape = 'rect'; 
+                break;
+        }
+        
         this.active = true;
     }
     
     update(dt) {
+        if (!this.active) return;
         this.x += this.vx * dt;
         this.y += this.vy * dt;
-        this.life -= 3 * dt;
-        this.size *= 1 - 2.5 * dt;
-        if (this.life <= 0 || this.size < 0.5) this.active = false;
+        this.life -= this.decay * dt; 
+        this.size *= (1 - 2 * dt);
+        if (this.life <= 0) this.active = false;
     }
     
     draw(ctx) {
+        if (!this.active) return;
         ctx.globalAlpha = Math.max(0, this.life);
         ctx.fillStyle = this.color;
-        ctx.fillRect(~~this.x, ~~this.y, ~~this.size, ~~this.size);
-        ctx.globalAlpha = 1;
+        ctx.beginPath();
+        
+        const s = ~~this.size;
+        const x = ~~this.x;
+        const y = ~~this.y;
+
+        if (this.shape === 'circle') {
+            ctx.arc(x, y, s/2, 0, Math.PI * 2);
+            ctx.fill();
+        } else if (this.shape === 'square') {
+            ctx.fillRect(x, y, s, s);
+        } else {
+            ctx.rect(x, y, s, s);
+            ctx.fill();
+        }
+        
+        ctx.globalAlpha = 1.0;
     }
 }
 
 class Background {
     constructor(game) {
         this.game = game;
-        this.x = 0;
+        this.bgX = 0;
         this.buildings = [];
-        for (let i = 0; i < 12; i++) {
+        for(let i=0; i<20; i++) {
             this.buildings.push({
-                x: i * 120,
-                w: 50 + Math.random() * 40,
-                h: 180 + Math.random() * 400,
-                c: `rgba(20,0,50,${0.3 + Math.random() * 0.35})`
+                x: i * 80,
+                w: 60 + Math.random() * 40,
+                h: 200 + Math.random() * 600,
+                color: `rgba(20, 0, 50, ${0.3 + Math.random() * 0.4})`
             });
         }
     }
     
     update(dt) {
         if (this.game.state === STATE.PLAYING) {
-            this.x -= CONFIG.speed * 0.06 * dt;
-            if (this.x <= -CONFIG.logicalWidth) this.x = 0;
+            this.bgX -= (CONFIG.speed * 0.1) * dt; 
+            if (this.bgX <= -CONFIG.logicalWidth) this.bgX = 0;
         }
     }
     
     draw(ctx) {
-        ctx.strokeStyle = "rgba(80,0,200,0.06)";
-        ctx.lineWidth = 1;
-        const gs = 120, off = ~~this.x % gs;
-        for (let x = off; x < CONFIG.logicalWidth; x += gs) {
-            ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, this.game.canvas.height); ctx.stroke();
+        ctx.strokeStyle = "rgba(100, 0, 255, 0.1)";
+        ctx.lineWidth = 2;
+        const gridSize = 80;
+        const offset = ~~this.bgX % gridSize;
+        for (let x = offset; x < CONFIG.logicalWidth; x += gridSize) {
+            ctx.beginPath();
+            ctx.moveTo(~~x, 0);
+            // Use game canvas height
+            ctx.lineTo(~~x, this.game.canvas.height);
+            ctx.stroke();
         }
-        for (let y = 0; y < this.game.canvas.height; y += gs) {
-            ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(CONFIG.logicalWidth, y); ctx.stroke();
+        for (let y = 0; y < this.game.canvas.height; y += gridSize) {
+            ctx.beginPath();
+            ctx.moveTo(0, ~~y);
+            ctx.lineTo(CONFIG.logicalWidth, ~~y);
+            ctx.stroke();
         }
         ctx.save();
-        ctx.translate(~~this.x, 0);
-        for (let j = 0; j < 2; j++) {
-            const s = j * 1440;
-            for (let b of this.buildings) {
-                ctx.fillStyle = b.c;
-                ctx.fillRect(~~(b.x + s), ~~(this.game.canvas.height - b.h), ~~b.w, ~~b.h);
-            }
+        ctx.translate(~~this.bgX, 0);
+        for(let j=0; j<2; j++) {
+            const shift = j * 1600;
+            this.buildings.forEach(b => {
+                ctx.fillStyle = b.color;
+                // Use game canvas height
+                ctx.fillRect(~~(b.x + shift), ~~(this.game.canvas.height - b.h), ~~b.w, ~~b.h);
+                ctx.fillStyle = "rgba(0, 255, 255, 0.2)";
+                for(let wy = this.game.canvas.height - b.h + 20; wy < this.game.canvas.height; wy += 40) {
+                      if(Math.random() > 0.3) ctx.fillRect(~~(b.x + shift + 10), ~~wy, ~~(b.w - 20), 20);
+                }
+            });
         }
         ctx.restore();
     }
 }
 
-let game = null;
+/**
+ * INITIALIZATION
+ */
+let gameInstance = null;
 
 function initYandex() {
-    YaGames.init().then(y => {
-        ysdk = y;
+    YaGames.init().then(ysdk_instance => {
+        console.log('Yandex SDK Initialized');
+        ysdk = ysdk_instance;
+        
+        // Device check
         if (ysdk.deviceInfo.type === 'mobile' || ysdk.deviceInfo.type === 'tablet') {
             document.body.classList.add('mobile-device');
         }
+        
+        // Report ready state
         ysdk.features.LoadingAPI.ready();
-        if (game?.lang) { game.lang.init(); game.lang.updateButtons(); }
+
+        // Update language based on SDK environment
+        if (gameInstance && gameInstance.langManager) {
+            gameInstance.langManager.init();
+            gameInstance.langManager.updateButtons();
+        }
     }).catch(console.error);
 }
 
 window.onload = () => {
-    game = new Game();
+    gameInstance = new Game();
     initYandex();
 };
+
 </script>
 </body>
 </html>
