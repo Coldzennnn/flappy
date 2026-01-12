@@ -8,13 +8,16 @@
     <title>Кибер Кот: Полёт</title>
     <style>
         /* --- БАЗОВЫЕ НАСТРОЙКИ --- */
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
         body {
             margin: 0;
             padding: 0;
             width: 100vw;
-            /* Используем dvh для корректной работы с адресной строкой мобильных браузеров */
             height: 100dvh; 
-            /* Цвет фона совпадает с игрой, чтобы убрать белые полосы */
             background: #0d001a; 
             display: flex;
             justify-content: center;
@@ -33,10 +36,8 @@
         /* --- ИГРОВОЙ КОНТЕЙНЕР --- */
         #game-wrapper {
             position: relative;
-            /* Адаптивная ширина и высота */
             width: 100%; 
             height: 100%;
-            /* Ограничение ширины для ПК, чтобы сохранить пропорции телефона */
             max-width: 60vh; 
             box-shadow: 0 0 100px rgba(0, 255, 255, 0.2);
             overflow: hidden;
@@ -47,7 +48,6 @@
             display: block;
             width: 100%;
             height: 100%;
-            /* Важно: contain сохраняет пропорции канваса внутри контейнера */
             object-fit: contain; 
             background: linear-gradient(180deg, #0d001a 0%, #000033 100%);
         }
@@ -68,34 +68,36 @@
         /* --- ВЕРХНЯЯ ПАНЕЛЬ --- */
         #top-bar {
             position: absolute;
-            top: 20px;
-            right: 20px;
+            top: 15px;
+            right: 15px;
             display: flex;
-            gap: 15px;
+            gap: 10px;
             pointer-events: auto;
             z-index: 100;
         }
 
         .icon-btn {
-            width: 50px;
-            height: 50px;
+            width: 48px;
+            height: 48px;
+            min-width: 48px;
+            min-height: 48px;
             background: rgba(0, 20, 40, 0.8);
             border: 2px solid #0ff;
             color: #0ff;
-            font-size: 24px;
+            font-size: 22px;
             display: flex;
             justify-content: center;
             align-items: center;
             cursor: pointer;
             box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
             border-radius: 8px;
-            transition: all 0.2s;
+            transition: all 0.15s;
         }
 
         .icon-btn:active {
             background: #0ff;
             color: #000;
-            transform: scale(0.9);
+            transform: scale(0.92);
         }
 
         .icon-btn.muted {
@@ -104,11 +106,10 @@
             box-shadow: 0 0 10px rgba(255, 0, 85, 0.3);
         }
 
-        /* Доп. стили для кнопки настроек на главном экране */
         #btn-settings-open {
             position: absolute;
-            top: 20px;
-            left: 20px;
+            top: 15px;
+            left: 15px;
             pointer-events: auto;
             z-index: 100;
         }
@@ -129,7 +130,8 @@
             pointer-events: auto;
             transition: opacity 0.3s;
             z-index: 15;
-            gap: 20px; 
+            padding: 15px;
+            overflow-y: auto;
         }
 
         .screen.hidden {
@@ -142,15 +144,14 @@
             background: rgba(0, 0, 0, 0.85);
             border: 1px solid #0ff;
             border-radius: 15px;
-            padding: 30px 40px;
+            padding: 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
             box-shadow: 0 0 20px rgba(0, 255, 255, 0.15);
-            min-width: 60%;
-            box-sizing: border-box;
+            width: 90%;
+            max-width: 320px;
             text-align: center;
-            margin-bottom: 10px;
         }
 
         .card-red {
@@ -161,8 +162,8 @@
         /* --- ТИПОГРАФИКА --- */
         .game-title {
             color: #0ff;
-            font-size: 6vh; /* Уменьшено с 8vh, чтобы вместить подзаголовок */
-            margin: 0 0 30px 0; /* Немного уменьшен отступ */
+            font-size: clamp(28px, 6vh, 48px);
+            margin: 0 0 20px 0;
             text-shadow: 0 0 10px #0ff, 0 0 20px #0ff;
             text-align: center;
             line-height: 1.1;
@@ -170,8 +171,8 @@
 
         .mission-failed {
             color: #ff0055;
-            font-size: 5vh;
-            margin: 0 0 20px 0;
+            font-size: clamp(24px, 5vh, 40px);
+            margin: 0 0 15px 0;
             text-shadow: 0 0 10px #ff0055;
             text-align: center;
             font-weight: bold;
@@ -180,23 +181,17 @@
 
         .label {
             color: #aaa;
-            font-size: 1.8vh;
+            font-size: clamp(10px, 1.8vh, 14px);
             letter-spacing: 2px;
             margin-bottom: 5px;
             text-transform: uppercase;
         }
 
-        .val-text {
-            color: #0ff; 
-            font-size: 2vh; 
-            margin-top: 5px;
-        }
-
         .score-big {
-            font-size: 8vh;
+            font-size: clamp(40px, 8vh, 64px);
             color: #fff;
             font-weight: bold;
-            margin: 0 0 15px 0;
+            margin: 0 0 10px 0;
             text-shadow: 0 0 10px rgba(255,255,255,0.5);
             line-height: 1;
         }
@@ -212,19 +207,19 @@
 
         .best-label {
             color: #0ff;
-            font-size: 2vh;
+            font-size: clamp(12px, 2vh, 16px);
             font-weight: bold;
         }
 
         .best-value {
             color: #fff;
-            font-size: 2vh;
+            font-size: clamp(12px, 2vh, 16px);
         }
 
         .title-paused {
             color: #FFFF00;
             text-shadow: 0 0 10px #FFFF00;
-            font-size: 6vh;
+            font-size: clamp(28px, 6vh, 48px);
             margin-bottom: 20px;
             text-align: center;
         }
@@ -234,19 +229,20 @@
             background: rgba(0, 20, 40, 0.9);
             border: 2px solid #0ff;
             color: #0ff;
-            padding: 20px 30px; /* Уменьшил горизонтальный паддинг для мобилок */
+            padding: 15px 25px;
             font-family: 'Courier New', Courier, monospace;
-            font-size: 3vh;
+            font-size: clamp(14px, 2.5vh, 20px);
             font-weight: bold;
             text-transform: uppercase;
             cursor: pointer;
             box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
             border-radius: 5px;
-            transition: all 0.2s;
-            /* Удалены min-width для .btn, чтобы использовать .btn-wide */
+            transition: all 0.15s;
             display: flex;
             justify-content: center;
             align-items: center;
+            min-height: 50px;
+            min-width: 180px;
         }
 
         .btn:active {
@@ -256,25 +252,23 @@
             transform: scale(0.96);
         }
 
-        /* Стили для широких кнопок в меню проигрыша */
         .gameover-buttons {
             display: flex;
             flex-direction: column;
             width: 100%;
-            gap: 15px;
+            gap: 12px;
             align-items: center;
             margin-top: 10px;
         }
 
         .btn-wide {
-            width: 80%;
-            max-width: 350px;
-            height: 60px; /* Фиксированная высота для единообразия */
-            padding: 0;   /* Убираем паддинг, контент центрируется флексом */
-            font-size: 2.5vh;
+            width: 85%;
+            max-width: 280px;
+            min-height: 52px;
+            padding: 12px 15px;
+            font-size: clamp(12px, 2.2vh, 18px);
         }
 
-        /* Стиль для суффикса (Реклама) */
         .ad-hint {
             font-size: 0.7em;
             opacity: 0.6;
@@ -308,8 +302,6 @@
             border-color: #FFFF00;
             color: #FFFF00;
             box-shadow: 0 0 15px rgba(255, 255, 0, 0.3);
-            min-width: 240px;
-            min-height: 70px;
         }
         .btn-resume:active {
             background: #FFFF00;
@@ -321,8 +313,6 @@
             color: #f0f;
             box-shadow: 0 0 15px rgba(255, 0, 255, 0.3);
             margin-top: 10px;
-            min-width: 240px;
-            min-height: 70px;
         }
         .btn-shop:active {
             background: #f0f;
@@ -334,56 +324,121 @@
             color: #aaa;
             background: rgba(0,0,0,0.5);
             box-shadow: none;
-            /* Размеры для этой кнопки задаются через .btn-wide если она в блоке gameover */
         }
         .btn-menu-secondary:active {
             background: #aaa;
             color: #000;
         }
 
-        /* --- SHOP STYLES --- */
+        /* --- SHOP STYLES (ПОЛНОСТЬЮ ПЕРЕРАБОТАН) --- */
+        #shop-screen {
+            padding: 70px 10px 20px 10px;
+            justify-content: flex-start;
+            gap: 10px;
+        }
+
+        .shop-header {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .shop-title {
+            color: #0ff;
+            font-size: clamp(24px, 5vh, 36px);
+            margin: 0;
+            text-shadow: 0 0 10px #0ff, 0 0 20px #0ff;
+            text-align: center;
+        }
+
+        .shop-credits {
+            color: #FFFF00;
+            font-size: clamp(16px, 3vh, 24px);
+            font-weight: bold;
+            text-shadow: 0 0 10px #FFFF00;
+            margin-top: 8px;
+        }
+
         .shop-container {
             display: flex;
             align-items: center;
-            gap: 20px;
-            margin-bottom: 20px;
+            justify-content: center;
+            gap: 5px;
+            width: 100%;
+            max-width: 350px;
+            margin: 10px 0;
         }
+
         .preview-box {
-            width: 200px;
-            height: 250px;
+            width: clamp(140px, 40vw, 180px);
+            height: clamp(160px, 45vw, 220px);
             border: 2px solid #555;
             background: rgba(0,0,0,0.8);
             border-radius: 10px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: space-between;
-            padding: 20px;
+            justify-content: center;
+            padding: 15px;
             box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            flex-shrink: 0;
         }
+
+        #shopCanvas {
+            width: clamp(100px, 30vw, 140px);
+            height: clamp(100px, 30vw, 140px);
+        }
+
         .arrow-btn {
-            background: none;
-            border: none;
-            color: #fff;
-            font-size: 40px;
-            cursor: pointer;
-            opacity: 0.7;
-            transition: 0.2s;
-        }
-        .arrow-btn:active {
-            transform: scale(0.8);
+            background: rgba(0, 20, 40, 0.8);
+            border: 2px solid #0ff;
             color: #0ff;
+            font-size: clamp(24px, 5vw, 36px);
+            cursor: pointer;
+            width: 48px;
+            height: 48px;
+            min-width: 48px;
+            min-height: 48px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.15s;
+            flex-shrink: 0;
         }
+
+        .arrow-btn:active {
+            transform: scale(0.9);
+            background: #0ff;
+            color: #000;
+        }
+
         .skin-name {
             color: #fff;
-            font-size: 2vh;
+            font-size: clamp(12px, 2.5vw, 16px);
             margin-top: 10px;
             text-align: center;
             font-weight: bold;
             text-shadow: 0 0 5px rgba(255,255,255,0.5);
         }
+
+        .shop-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+            max-width: 280px;
+            align-items: center;
+        }
+
+        .shop-buttons .btn {
+            width: 100%;
+            min-height: 48px;
+            font-size: clamp(12px, 2.2vh, 16px);
+        }
         
-        /* Кнопки магазина */
         .btn-equipped {
             border-color: #555 !important;
             color: #888 !important;
@@ -407,28 +462,11 @@
             background: rgba(20,0,0,0.5) !important;
             opacity: 0.7;
         }
-        
-        /* Кнопки в магазине (Select/Back) тоже должны быть удобными */
-        #btn-shop-select, #btn-shop-back, #btn-shop-free-credits {
-             min-width: 200px;
-             min-height: 60px;
-        }
-
-        #shop-credits {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            color: #FFFF00;
-            font-size: 3vh;
-            font-weight: bold;
-            text-shadow: 0 0 10px #FFFF00;
-            z-index: 101; /* Поверх кнопки настроек */
-        }
 
         /* --- НАСТРОЙКИ (ЯЗЫК) --- */
         .lang-group {
             display: flex;
-            gap: 15px;
+            gap: 10px;
             margin-top: 15px;
             width: 100%;
             justify-content: center;
@@ -436,14 +474,16 @@
 
         .btn-lang {
             flex: 1;
-            padding: 10px;
+            padding: 12px 8px;
             border: 1px solid #555;
             background: rgba(0, 0, 0, 0.5);
             color: #888;
             cursor: pointer;
             font-family: inherit;
-            font-size: 2vh;
+            font-size: clamp(12px, 2vh, 16px);
             transition: all 0.2s;
+            min-height: 44px;
+            border-radius: 5px;
         }
 
         .btn-lang.active {
@@ -462,7 +502,7 @@
             pointer-events: none;
         }
         #score-display {
-            font-size: 8vh;
+            font-size: clamp(40px, 8vh, 64px);
             color: rgba(255, 255, 255, 0.8);
             font-weight: bold;
             text-shadow: 0 0 10px #000;
@@ -482,8 +522,9 @@
             justify-content: center;
             align-items: center;
             color: #0ff;
-            font-size: 24px;
+            font-size: 20px;
             text-align: center;
+            padding: 20px;
         }
         
         #orientation-warning svg {
@@ -499,13 +540,70 @@
             100% { transform: rotate(0deg); }
         }
 
-        /* Show warning only in landscape AND if it's a mobile device (checked in JS) */
         @media (orientation: landscape) {
             body.mobile-device #orientation-warning {
                 display: flex;
             }
         }
 
+        /* --- MOBILE SPECIFIC ADJUSTMENTS --- */
+        @media (max-height: 600px) {
+            #shop-screen {
+                padding-top: 60px;
+                gap: 8px;
+            }
+            
+            .shop-title {
+                font-size: 20px;
+            }
+            
+            .shop-credits {
+                font-size: 14px;
+                margin-top: 5px;
+            }
+            
+            .preview-box {
+                width: 120px;
+                height: 140px;
+                padding: 10px;
+            }
+            
+            #shopCanvas {
+                width: 90px;
+                height: 90px;
+            }
+            
+            .skin-name {
+                font-size: 11px;
+                margin-top: 5px;
+            }
+            
+            .shop-buttons .btn {
+                min-height: 44px;
+                padding: 10px;
+                font-size: 11px;
+            }
+            
+            .arrow-btn {
+                width: 44px;
+                height: 44px;
+                min-width: 44px;
+                min-height: 44px;
+                font-size: 20px;
+            }
+        }
+
+        @media (max-height: 500px) {
+            .preview-box {
+                width: 100px;
+                height: 120px;
+            }
+            
+            #shopCanvas {
+                width: 70px;
+                height: 70px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -531,7 +629,7 @@
             </button>
         </div>
 
-        <!-- Кнопка настроек на стартовом экране (видна только в START) -->
+        <!-- Кнопка настроек на стартовом экране -->
         <button id="btn-settings-open" class="icon-btn">⚙️</button>
 
         <!-- HUD -->
@@ -542,41 +640,44 @@
         <!-- START SCREEN -->
         <div id="start-screen" class="screen">
             <h1 class="game-title" id="txt-title">CYBER<br>CAT</h1>
-            <button class="btn" id="btn-start" style="min-width: 240px; min-height: 70px;">START MISSION</button>
+            <button class="btn" id="btn-start">START MISSION</button>
             <button class="btn btn-shop" id="btn-shop-open">SHOP</button>
-            <div style="color: #aaa; font-size: 1.5vh; margin-top: 5px;" id="txt-tap">TAP TO JUMP</div>
+            <div style="color: #aaa; font-size: clamp(10px, 1.5vh, 14px); margin-top: 10px;" id="txt-tap">TAP TO JUMP</div>
         </div>
         
-        <!-- SHOP SCREEN -->
+        <!-- SHOP SCREEN (ПОЛНОСТЬЮ ПЕРЕРАБОТАН) -->
         <div id="shop-screen" class="screen hidden">
-            <h1 class="game-title" id="txt-shop-title" style="font-size: 5vh; margin-bottom: 10px;">ARMORY</h1>
-            <div id="shop-credits">CREDITS: 0</div>
+            <div class="shop-header">
+                <h1 class="shop-title" id="txt-shop-title">ARMORY</h1>
+                <div class="shop-credits" id="shop-credits">CREDITS: 0</div>
+            </div>
             
             <div class="shop-container">
                 <button class="arrow-btn" id="btn-shop-prev">◀</button>
                 <div class="preview-box">
-                    <canvas id="shopCanvas" width="160" height="160" style="width: 160px; height: 160px;"></canvas>
+                    <canvas id="shopCanvas" width="140" height="140"></canvas>
                     <div class="skin-name" id="shop-skin-name">CYBER CAT</div>
                 </div>
                 <button class="arrow-btn" id="btn-shop-next">▶</button>
             </div>
 
-            <button class="btn" id="btn-shop-select">SELECT</button>
-            <button class="btn btn-revive" id="btn-shop-free-credits" style="margin-top: 10px; font-size: 2vh;">📺 FREE CREDITS</button>
-            <button class="btn" id="btn-shop-back">BACK</button>
+            <div class="shop-buttons">
+                <button class="btn" id="btn-shop-select">SELECT</button>
+                <button class="btn btn-revive" id="btn-shop-free-credits">📺 FREE CREDITS</button>
+                <button class="btn btn-menu-secondary" id="btn-shop-back">BACK</button>
+            </div>
         </div>
 
         <!-- PAUSE SCREEN -->
         <div id="pause-screen" class="screen hidden">
             <h2 class="title-paused" id="txt-paused">SYSTEM<br>PAUSED</h2>
             <button class="btn btn-resume" id="btn-resume">RESUME</button>
-            <!-- Кнопка Меню в Паузе -->
-            <button class="btn btn-menu-secondary" id="btn-pause-menu" style="min-width: 240px; min-height: 70px;">MENU</button>
+            <button class="btn btn-menu-secondary" id="btn-pause-menu" style="margin-top: 15px;">MENU</button>
         </div>
 
         <!-- GAMEOVER SCREEN -->
         <div id="gameover-screen" class="screen hidden">
-            <div class="card card-red" style="margin-bottom: 20px;">
+            <div class="card card-red">
                 <div class="mission-failed" id="txt-failed">MISSION<br>FAILED</div>
                 <div class="label" id="txt-score-label">SCORE</div>
                 <div class="score-big" id="final-score">0</div>
@@ -586,7 +687,6 @@
                 </div>
             </div>
 
-            <!-- New Button Container -->
             <div class="gameover-buttons">
                 <button class="btn btn-wide btn-revive" id="btn-revive" style="display: none;">
                     📺 REVIVE <span class="ad-hint">(Ad)</span>
@@ -599,7 +699,7 @@
         <!-- SETTINGS SCREEN -->
         <div id="settings-screen" class="screen hidden">
             <div class="card">
-                <div class="label" style="color:#fff; font-size:3vh; margin-bottom:20px;" id="txt-settings-title">SETTINGS</div>
+                <div class="label" style="color:#fff; font-size: clamp(18px, 3vh, 24px); margin-bottom:20px;" id="txt-settings-title">SETTINGS</div>
                 
                 <div class="label" id="txt-lang-label">LANGUAGE</div>
                 <div class="lang-group">
@@ -608,7 +708,7 @@
                 </div>
             </div>
             
-            <button class="btn" id="btn-settings-back" style="min-width: 240px; min-height: 70px;">BACK</button>
+            <button class="btn" id="btn-settings-back" style="margin-top: 20px;">BACK</button>
         </div>
 
     </div>
@@ -627,7 +727,7 @@ const SKINS = [
     { id: 0, nameKey: 'skin_0', price: 0, color: '#00FFFF', flame: '#FFFF00', eyeColor: '#fff', jetpackColor: '#FFFF00', bodyColor: '#000' },
     { id: 1, nameKey: 'skin_1', price: 100, color: '#FF00FF', flame: '#ff66ff', eyeColor: '#0ff', jetpackColor: '#800080', bodyColor: '#1a001a' },
     { id: 2, nameKey: 'skin_2', price: 250, color: '#00FFFF', flame: '#e0ffff', eyeColor: '#0088ff', jetpackColor: '#C0C0C0', bodyColor: '#FFFFFF' },
-    { id: 3, nameKey: 'skin_3', price: 500, color: '#FF4500', flame: '#FF4500', eyeColor: '#fff', jetpackColor: '#FF0000', bodyColor: '#110000' }, // INFERNO
+    { id: 3, nameKey: 'skin_3', price: 500, color: '#FF4500', flame: '#FF4500', eyeColor: '#fff', jetpackColor: '#FF0000', bodyColor: '#110000' },
     { id: 4, nameKey: 'skin_4', price: 1000, color: '#FFD700', flame: '#ffffff', eyeColor: '#fff', jetpackColor: '#DAA520', bodyColor: '#000' }
 ];
 
@@ -637,8 +737,6 @@ const SKINS = [
 const TRANSLATIONS = {
     'en': {
         'title': 'CYBER CAT:<br>FLIGHT',
-        'mission_label': 'MISSION PROTOCOL',
-        'mission_val': 'AVOID OBSTACLES',
         'tap': 'TAP TO JUMP',
         'start': 'START MISSION',
         'paused': 'SYSTEM<br>PAUSED',
@@ -667,8 +765,6 @@ const TRANSLATIONS = {
     },
     'ru': {
         'title': 'КИБЕР КОТ:<br>ПОЛЁТ',
-        'mission_label': 'ЦЕЛЬ МИССИИ',
-        'mission_val': 'ИЗБЕГАЙ ПРЕПЯТСТВИЙ',
         'tap': 'НАЖМИ ДЛЯ ПРЫЖКА',
         'start': 'НАЧАТЬ',
         'paused': 'СИСТЕМА<br>НА ПАУЗЕ',
@@ -749,8 +845,6 @@ class LanguageManager {
         };
 
         setText('txt-title', t.title);
-        setText('txt-mission-label', t.mission_label);
-        setText('txt-mission-val', t.mission_val);
         setText('txt-tap', t.tap);
         setText('btn-start', t.start);
         setText('btn-shop-open', t.shop);
@@ -777,13 +871,25 @@ class LanguageManager {
 }
 
 /**
- * AUDIO SYSTEM
+ * OPTIMIZED AUDIO SYSTEM WITH THROTTLING
  */
 class SoundManager {
     constructor() {
         this.ctx = null;
         this.muted = false;
         this.initialized = false;
+        
+        // Throttling для предотвращения лагов
+        this.lastJumpTime = 0;
+        this.lastScoreTime = 0;
+        this.lastClickTime = 0;
+        this.jumpThrottle = 50;   // мс между звуками прыжка
+        this.scoreThrottle = 80;  // мс между звуками очков
+        this.clickThrottle = 30;  // мс между кликами
+        
+        // Пул осцилляторов для переиспользования
+        this.activeOscillators = 0;
+        this.maxOscillators = 8;  // Ограничение одновременных звуков
     }
 
     init() {
@@ -799,7 +905,6 @@ class SoundManager {
 
     toggleMute() {
         this.muted = !this.muted;
-        // Resume if unmuted
         if (!this.muted && this.ctx && this.ctx.state === 'suspended') {
             this.ctx.resume();
         }
@@ -818,17 +923,26 @@ class SoundManager {
         }
     }
 
-    // Helper to ensure context is ready
     _ready() {
         if (!this.initialized) this.init();
         if (!this.ctx) return false;
         if (this.muted) return false;
+        if (this.activeOscillators >= this.maxOscillators) return false;
         if (this.ctx.state === 'suspended') this.ctx.resume();
         return true;
     }
 
+    _canPlay(lastTime, throttle) {
+        const now = performance.now();
+        return (now - lastTime) >= throttle;
+    }
+
     playJump() {
+        if (!this._canPlay(this.lastJumpTime, this.jumpThrottle)) return;
         if (!this._ready()) return;
+        
+        this.lastJumpTime = performance.now();
+        this.activeOscillators++;
 
         const t = this.ctx.currentTime;
         const osc = this.ctx.createOscillator();
@@ -841,15 +955,20 @@ class SoundManager {
         osc.frequency.setValueAtTime(150, t);
         osc.frequency.exponentialRampToValueAtTime(400, t + 0.05);
 
-        gain.gain.setValueAtTime(0.1, t);
+        gain.gain.setValueAtTime(0.08, t);
         gain.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
 
+        osc.onended = () => { this.activeOscillators--; };
         osc.start(t);
         osc.stop(t + 0.05);
     }
 
     playScore() {
+        if (!this._canPlay(this.lastScoreTime, this.scoreThrottle)) return;
         if (!this._ready()) return;
+        
+        this.lastScoreTime = performance.now();
+        this.activeOscillators++;
         
         const t = this.ctx.currentTime;
         const osc = this.ctx.createOscillator();
@@ -862,9 +981,10 @@ class SoundManager {
         osc.frequency.setValueAtTime(800, t);
         osc.frequency.exponentialRampToValueAtTime(1500, t + 0.08);
 
-        gain.gain.setValueAtTime(0.05, t);
+        gain.gain.setValueAtTime(0.04, t);
         gain.gain.linearRampToValueAtTime(0.0, t + 0.08);
 
+        osc.onended = () => { this.activeOscillators--; };
         osc.start(t);
         osc.stop(t + 0.08);
     }
@@ -872,6 +992,7 @@ class SoundManager {
     playCrash() {
         if (!this._ready()) return;
         
+        this.activeOscillators++;
         const t = this.ctx.currentTime;
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
@@ -883,53 +1004,68 @@ class SoundManager {
         osc.frequency.setValueAtTime(100, t);
         osc.frequency.exponentialRampToValueAtTime(10, t + 0.3);
 
-        gain.gain.setValueAtTime(0.1, t);
+        gain.gain.setValueAtTime(0.08, t);
         gain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
 
+        osc.onended = () => { this.activeOscillators--; };
         osc.start(t);
         osc.stop(t + 0.3);
     }
-    
-    // --- NEW SOUNDS ---
-    playTone(freq, type, duration, vol = 0.1) {
+
+    playUiClick() {
+        if (!this._canPlay(this.lastClickTime, this.clickThrottle)) return;
         if (!this._ready()) return;
+        
+        this.lastClickTime = performance.now();
+        this.activeOscillators++;
+        
         const t = this.ctx.currentTime;
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
         osc.connect(gain);
         gain.connect(this.ctx.destination);
-        osc.type = type;
-        osc.frequency.setValueAtTime(freq, t);
-        gain.gain.setValueAtTime(vol, t);
-        gain.gain.exponentialRampToValueAtTime(0.001, t + duration);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(1200, t);
+        gain.gain.setValueAtTime(0.04, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+        osc.onended = () => { this.activeOscillators--; };
         osc.start(t);
-        osc.stop(t + duration);
-    }
-
-    playUiClick() {
-        // High blip
-        this.playTone(1200, 'sine', 0.1, 0.05);
+        osc.stop(t + 0.08);
     }
 
     playUiBack() {
-        // Low blip
-        this.playTone(400, 'sine', 0.15, 0.05);
+        if (!this._ready()) return;
+        this.activeOscillators++;
+        const t = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(400, t);
+        gain.gain.setValueAtTime(0.04, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+        osc.onended = () => { this.activeOscillators--; };
+        osc.start(t);
+        osc.stop(t + 0.12);
     }
 
     playShopSuccess() {
         if (!this._ready()) return;
         
         const t = this.ctx.currentTime;
-        // C5, E5, G5
         [523.25, 659.25, 783.99].forEach((freq, i) => {
+            if (this.activeOscillators >= this.maxOscillators) return;
+            this.activeOscillators++;
             const osc = this.ctx.createOscillator();
             const gain = this.ctx.createGain();
             osc.connect(gain);
             gain.connect(this.ctx.destination);
             osc.type = 'square';
             osc.frequency.setValueAtTime(freq, t + i * 0.05);
-            gain.gain.setValueAtTime(0.05, t + i * 0.05);
+            gain.gain.setValueAtTime(0.04, t + i * 0.05);
             gain.gain.exponentialRampToValueAtTime(0.001, t + i * 0.05 + 0.1);
+            osc.onended = () => { this.activeOscillators--; };
             osc.start(t + i * 0.05);
             osc.stop(t + i * 0.05 + 0.1);
         });
@@ -938,6 +1074,7 @@ class SoundManager {
     playShopError() {
         if (!this._ready()) return;
         
+        this.activeOscillators++;
         const t = this.ctx.currentTime;
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
@@ -946,8 +1083,9 @@ class SoundManager {
         osc.type = 'sawtooth';
         osc.frequency.setValueAtTime(150, t);
         osc.frequency.linearRampToValueAtTime(100, t + 0.2);
-        gain.gain.setValueAtTime(0.1, t);
+        gain.gain.setValueAtTime(0.08, t);
         gain.gain.linearRampToValueAtTime(0.0, t + 0.2);
+        osc.onended = () => { this.activeOscillators--; };
         osc.start(t);
         osc.stop(t + 0.2);
     }
@@ -955,6 +1093,7 @@ class SoundManager {
     playEquip() {
         if (!this._ready()) return;
         
+        this.activeOscillators++;
         const t = this.ctx.currentTime;
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
@@ -963,14 +1102,11 @@ class SoundManager {
         osc.type = 'triangle';
         osc.frequency.setValueAtTime(800, t);
         osc.frequency.exponentialRampToValueAtTime(100, t + 0.1);
-        gain.gain.setValueAtTime(0.1, t);
+        gain.gain.setValueAtTime(0.08, t);
         gain.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+        osc.onended = () => { this.activeOscillators--; };
         osc.start(t);
         osc.stop(t + 0.1);
-    }
-    
-    playBuy() {
-        this.playShopSuccess();
     }
 }
 
@@ -978,21 +1114,14 @@ class SoundManager {
  * КОНФИГУРАЦИЯ
  */
 const CONFIG = {
-    // Remove logicalHeight as it is dynamic
     logicalWidth: 720,
-    
-    // Physics (px/sec)
     gravity: 1900,        
     jumpForce: -620,       
     terminalVelocity: 1000,
-    
-    // Difficulty
     initialSpeed: 350,
-    speed: 350,          // Current Speed
+    speed: 350,
     speedIncreaseStep: 1.5,
     maxSpeed: 600,
-    
-    // Balancing
     gapSize: 220, 
     minPipeDistance: 480
 };
@@ -1015,9 +1144,8 @@ class Game {
         this.ctx = this.canvas.getContext('2d');
         this.wrapper = document.getElementById('game-wrapper');
 
-        // Initial setup - will be updated in resize
         this.canvas.width = CONFIG.logicalWidth;
-        this.canvas.height = 1280; // Placeholder
+        this.canvas.height = 1280;
 
         this.ui = {
             start: document.getElementById('start-screen'),
@@ -1060,13 +1188,12 @@ class Game {
         
         this.lastTime = 0;
         this.score = 0;
-        this.highScore = localStorage.getItem('cybercat_highscore') || 0;
+        this.highScore = parseInt(localStorage.getItem('cybercat_highscore')) || 0;
         this.credits = parseInt(localStorage.getItem('cybercat_credits')) || 0;
         this.inventory = JSON.parse(localStorage.getItem('cybercat_inventory')) || [0];
         
         this.hasRevived = false;
 
-        // SHOP STATE
         this.selectedSkinId = parseInt(localStorage.getItem('cybercat_skin')) || 0;
         this.browsingSkinIndex = this.selectedSkinId;
         this.shopCtx = this.ui.shopCanvas.getContext('2d');
@@ -1075,10 +1202,10 @@ class Game {
         this.obstacles = [];
         this.background = new Background(this);
 
+        // Оптимизированный пул частиц
         this.particlePool = [];
-        for(let i=0; i<50; i++) {
+        for(let i = 0; i < 30; i++) {
             this.particlePool.push(new Particle());
-            this.particlePool[i].active = false;
         }
 
         this.initListeners();
@@ -1090,7 +1217,6 @@ class Game {
     initListeners() {
         window.addEventListener('resize', () => this.resize());
         
-        // --- AUDIO UNLOCKER ---
         const unlockAudio = () => {
             this.sound.init();
             this.sound.resumeAudio();
@@ -1100,27 +1226,23 @@ class Game {
         document.addEventListener('pointerdown', unlockAudio);
         document.addEventListener('keydown', unlockAudio);
 
-        // --- AUDIO SUSPEND ON TAB HIDE (Rule Fix) ---
         document.addEventListener('visibilitychange', () => {
             if (document.hidden) {
-                // Игрок ушел со вкладки: Глушим звук и ставим паузу
                 this.sound.suspendAudio();
                 if (this.state === STATE.PLAYING) {
                     this.togglePause();
                 }
             } else {
-                // Игрок вернулся: Восстанавливаем звук
                 this.sound.resumeAudio();
             }
         });
 
-        const startAction = (e) => {
+        this.ui.btnStart.addEventListener('click', (e) => {
             e.preventDefault();
             this.sound.init();
             this.sound.playUiClick();
             this.startGame();
-        };
-        this.ui.btnStart.addEventListener('click', startAction);
+        });
         
         this.ui.btnRestart.addEventListener('click', (e) => {
             e.preventDefault();
@@ -1140,7 +1262,6 @@ class Game {
             this.togglePause();
         });
 
-        // SHOP LISTENERS
         this.ui.btnShopOpen.addEventListener('click', (e) => {
             e.preventDefault();
             this.sound.playUiClick();
@@ -1175,7 +1296,6 @@ class Game {
             e.preventDefault();
             this.sound.playUiBack();
             
-            // Show Ad before exit
             if (window.ysdk) {
                 this.sound.suspendAudio();
                 window.ysdk.adv.showFullscreenAdv({
@@ -1206,7 +1326,7 @@ class Game {
         this.ui.btnSound.addEventListener('click', (e) => {
             e.stopPropagation();
             const isMuted = this.sound.toggleMute();
-            this.sound.playUiClick();
+            if (!isMuted) this.sound.playUiClick();
             this.ui.btnSound.innerText = isMuted ? '🔇' : '🔊';
             this.ui.btnSound.classList.toggle('muted', isMuted);
         });
@@ -1227,7 +1347,7 @@ class Game {
             e.stopPropagation();
             this.sound.playUiClick();
             this.langManager.setLanguage('en');
-            this.updateShopUI(); // Update texts if shop is open
+            this.updateShopUI();
         });
 
         this.ui.btnLangRu.addEventListener('click', (e) => {
@@ -1236,7 +1356,6 @@ class Game {
             this.langManager.setLanguage('ru');
             this.updateShopUI();
         });
-
 
         this.wrapper.addEventListener('pointerdown', (e) => {
             if (e.target.tagName === 'BUTTON') return;
@@ -1265,9 +1384,6 @@ class Game {
     resize() {
         const winW = window.innerWidth;
         const winH = window.innerHeight;
-        // Use a safe aspect ratio, constrained by CSS max-width which is 60vh ~ 0.6 aspect
-        // But for internal calculation, we want to map full height.
-        // effectiveWidth is how wide the game LOOKS. 
         const effectiveWidth = Math.min(winW, winH * 0.6); 
         const aspect = effectiveWidth / winH;
         
@@ -1275,7 +1391,6 @@ class Game {
         this.canvas.height = CONFIG.logicalWidth / aspect;
     }
 
-    /* --- SHOP LOGIC --- */
     openShop() {
         this.state = STATE.SHOP;
         this.browsingSkinIndex = this.selectedSkinId;
@@ -1305,33 +1420,29 @@ class Game {
         const isOwned = this.inventory.includes(skin.id);
 
         if (isOwned) {
-            // Select logic
             this.selectedSkinId = this.browsingSkinIndex;
             localStorage.setItem('cybercat_skin', this.selectedSkinId);
             this.cat.updateSkin();
-            this.sound.playEquip(); // Play equip sound
+            this.sound.playEquip();
             this.updateShopUI();
         } else {
-            // Buy logic
             if (this.credits >= skin.price) {
                 this.credits -= skin.price;
                 this.inventory.push(skin.id);
-                this.selectedSkinId = skin.id; // Auto select on buy
+                this.selectedSkinId = skin.id;
                 
-                // Save data
                 localStorage.setItem('cybercat_credits', this.credits);
                 localStorage.setItem('cybercat_inventory', JSON.stringify(this.inventory));
                 localStorage.setItem('cybercat_skin', this.selectedSkinId);
                 
-                this.sound.playShopSuccess(); // Play success sound
+                this.sound.playShopSuccess();
                 this.cat.updateSkin();
                 this.updateShopUI();
             } else {
-                // Not enough money
-                this.sound.playShopError(); // Play error sound
+                this.sound.playShopError();
                 this.ui.btnShopSelect.classList.add('btn-locked');
                 setTimeout(() => {
-                    this.updateShopUI(); // reset style
+                    this.updateShopUI();
                 }, 300);
             }
         }
@@ -1360,7 +1471,6 @@ class Game {
                 }
             });
         } else {
-            // Mock for testing
             rewardGranted = true;
             finishAd();
         }
@@ -1370,18 +1480,15 @@ class Game {
         const skin = SKINS[this.browsingSkinIndex];
         this.ui.shopSkinName.innerText = this.langManager.get(skin.nameKey);
         this.ui.shopCredits.innerText = `${this.langManager.get('credits')}: ${this.credits}`;
-        this.ui.btnShopFreeCredits.innerText = this.langManager.get('free_credits');
+        this.ui.btnShopFreeCredits.innerHTML = this.langManager.get('free_credits');
         
-        // Update Title via Language Manager to ensure correct language
         const shopTitle = document.getElementById('txt-shop-title');
         if (shopTitle) shopTitle.innerText = this.langManager.get('shop_title');
 
         const isOwned = this.inventory.includes(skin.id);
         const isSelected = this.selectedSkinId === skin.id;
 
-        // Reset Styles
         this.ui.btnShopSelect.classList.remove('btn-equipped', 'btn-buy', 'btn-locked');
-        this.ui.btnShopSelect.style.borderColor = "";
 
         if (isOwned) {
             if (isSelected) {
@@ -1398,24 +1505,22 @@ class Game {
                 this.ui.btnShopSelect.classList.add('btn-locked');
             }
         }
+        
+        this.drawShopPreview();
     }
 
     drawShopPreview() {
         const ctx = this.shopCtx;
-        ctx.clearRect(0, 0, 160, 160);
+        const cw = this.ui.shopCanvas.width;
+        const ch = this.ui.shopCanvas.height;
         
-        // Background glow
-        const skin = SKINS[this.browsingSkinIndex];
-        ctx.save();
+        ctx.clearRect(0, 0, cw, ch);
         ctx.fillStyle = "#111";
-        ctx.fillRect(0,0,160,160);
+        ctx.fillRect(0, 0, cw, ch);
         
-        // Draw Cat in Center
-        ctx.translate(80, 80);
-        
-        // Use Global Draw Function
+        ctx.save();
+        ctx.translate(cw / 2, ch / 2);
         drawCatVisuals(ctx, 50, 40, this.browsingSkinIndex, null); 
-
         ctx.restore();
     }
 
@@ -1486,7 +1591,7 @@ class Game {
         CONFIG.speed = CONFIG.initialSpeed;
         this.hasRevived = false;
         
-        this.cat.updateSkin(); // Ensure correct skin on start
+        this.cat.updateSkin();
         this.cat.reset(); 
         this.cat.jump();
         this.score = 0;
@@ -1526,7 +1631,7 @@ class Game {
             this.sound.suspendAudio();
             window.ysdk.adv.showRewardedVideo({
                 callbacks: {
-                    onOpen: () => { console.log('Video ad open.'); },
+                    onOpen: () => {},
                     onRewarded: () => { rewardGranted = true; },
                     onClose: () => { finishRevive(); },
                     onError: (e) => { finishRevive(); }
@@ -1590,13 +1695,8 @@ class Game {
         this.ui.gameover.classList.remove('hidden');
         this.state = STATE.GAMEOVER;
         
-        try {
-            this.sound.playCrash();
-        } catch (e) {
-            console.error('Audio play failed', e);
-        }
+        this.sound.playCrash();
         
-        // Economy Logic
         this.credits += this.score;
         localStorage.setItem('cybercat_credits', this.credits);
         
@@ -1610,11 +1710,7 @@ class Game {
         this.ui.finalScore.innerText = this.score;
         this.ui.bestScore.innerText = this.highScore;
 
-        if (!this.hasRevived) {
-            this.ui.btnRevive.style.display = 'flex';
-        } else {
-            this.ui.btnRevive.style.display = 'none';
-        }
+        this.ui.btnRevive.style.display = this.hasRevived ? 'none' : 'flex';
     }
 
     updateScoreUI() {
@@ -1623,8 +1719,11 @@ class Game {
 
     loop(timestamp) {
         if (!this.lastTime) this.lastTime = timestamp;
-        const dt = (timestamp - this.lastTime) / 1000;
+        let dt = (timestamp - this.lastTime) / 1000;
         this.lastTime = timestamp;
+
+        // Ограничение dt для стабильности
+        if (dt > 0.1) dt = 0.1;
 
         this.update(dt);
         this.draw();
@@ -1633,17 +1732,20 @@ class Game {
     }
 
     update(dt) {
-        // Animation for shop
         if (this.state === STATE.SHOP) {
-            this.drawShopPreview();
             return;
         }
 
         if (this.state === STATE.PAUSED || this.state === STATE.SETTINGS) return;
-        if (dt > 0.1) dt = 0.1;
 
         this.background.update(dt);
-        this.particlePool.forEach(p => p.update(dt));
+        
+        // Обновляем только активные частицы
+        for (let i = 0; i < this.particlePool.length; i++) {
+            if (this.particlePool[i].active) {
+                this.particlePool[i].update(dt);
+            }
+        }
 
         if (this.state === STATE.PLAYING) {
             this.cat.update(dt);
@@ -1708,65 +1810,56 @@ class Game {
     }
 
     draw() {
-        // Skip main draw if in shop
         if (this.state === STATE.SHOP) return;
 
-        this.ctx.fillStyle = "#0d001a";
-        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        const ctx = this.ctx;
+        ctx.fillStyle = "#0d001a";
+        ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-        this.background.draw(this.ctx);
-        this.obstacles.forEach(obs => obs.draw(this.ctx));
-        this.particlePool.forEach(p => p.draw(this.ctx));
-        this.cat.draw(this.ctx);
+        this.background.draw(ctx);
+        
+        for (let i = 0; i < this.obstacles.length; i++) {
+            this.obstacles[i].draw(ctx);
+        }
+        
+        for (let i = 0; i < this.particlePool.length; i++) {
+            if (this.particlePool[i].active) {
+                this.particlePool[i].draw(ctx);
+            }
+        }
+        
+        this.cat.draw(ctx);
 
         if (this.state === STATE.PAUSED || this.state === STATE.SETTINGS) {
-            this.ctx.fillStyle = "rgba(0,0,0,0.3)";
-            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            ctx.fillStyle = "rgba(0,0,0,0.3)";
+            ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
         }
     }
 }
 
 /**
- * VISUAL HELPER FUNCTION (Global)
+ * VISUAL HELPER FUNCTION
  */
 function drawCatVisuals(ctx, w, h, skinId, velocity) {
     const skin = SKINS[skinId];
     
-    // --- SETUP STYLES ---
-    let fillColor = "#000";
+    let fillColor = skin.bodyColor || "#000";
     let strokeColor = skin.color;
     
-    if (skinId === 2) { // PHANTOM
-        fillColor = "#ffffff";
-        strokeColor = "#00FFFF"; // Explicit Cyan stroke
-    } else if (skinId === 4) { // MIDAS
+    if (skinId === 4) {
         let grd = ctx.createLinearGradient(-w/2, -h/2, w/2, h/2);
         grd.addColorStop(0, "#FFD700"); 
         grd.addColorStop(1, "#FFA500"); 
         fillColor = grd;
         strokeColor = "#FFA500";
-    } else if (skinId === 3) { // INFERNO
-        fillColor = "#110000";
-    } else if (skinId === 1) { // PLASMA
-        fillColor = "#1a001a";
     }
-    
-    // Override if specific body color exists in config (mostly for fallback)
-    if (skin.bodyColor && skinId !== 4) fillColor = skin.bodyColor;
 
-    // --- LAYER 1: JETPACK & FLAME ---
-    // Flame (behind jetpack)
-    if (velocity < 0 || velocity === null) {
+    // Flame
+    if (velocity === null || velocity < 0) {
         const flameLength = 20 + Math.random() * 15;
-        let flameColor = skin.flame;
-        
-        if (velocity !== null && CONFIG.speed > 500) {
-             flameColor = Math.random() > 0.5 ? "#FFFFFF" : flameColor; 
-        }
-        
-        ctx.fillStyle = flameColor;
-        ctx.shadowBlur = 20;
-        ctx.shadowColor = flameColor;
+        ctx.fillStyle = skin.flame;
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = skin.flame;
         
         ctx.beginPath();
         ctx.moveTo(-w/2 - 10, -5); 
@@ -1776,14 +1869,13 @@ function drawCatVisuals(ctx, w, h, skinId, velocity) {
         ctx.shadowBlur = 0; 
     }
 
-    // Jetpack Body
+    // Jetpack
     ctx.fillStyle = skin.jetpackColor || '#555';
     ctx.fillRect(-w/2 - 10, -5, 10, 20);
 
-    // --- LAYER 3: BODY ---
-    ctx.shadowBlur = (skinId === 4 || skinId === 2) ? 25 : 15; 
+    // Body
+    ctx.shadowBlur = skinId === 4 ? 20 : 12; 
     ctx.shadowColor = skin.color;
-    if (skinId === 4) ctx.shadowColor = "#FFD700";
     
     ctx.strokeStyle = strokeColor;
     ctx.lineWidth = 3;
@@ -1792,66 +1884,51 @@ function drawCatVisuals(ctx, w, h, skinId, velocity) {
     ctx.fillRect(-w/2, -h/2, w, h);
     ctx.strokeRect(-w/2, -h/2, w, h);
 
-    // --- LAYER 4: EARS (Logic) ---
-    // If Midas (4) -> Skip ears (draw crown later)
+    // Ears
     if (skinId !== 4) {
         ctx.lineWidth = 2;
         ctx.strokeStyle = strokeColor; 
-        
-        // Standard ear height is -15, Neon Cat (1) gets slightly taller ears (-16 instead of -17)
-        let yTop = (skinId === 1) ? -16 : -15;
+        let yTop = -15;
 
         ctx.beginPath();
-        // Left Ear
         ctx.moveTo(-10, -h/2);
         ctx.lineTo(-20, -h/2 + yTop); 
         ctx.lineTo(0, -h/2);
-        // Right Ear
         ctx.moveTo(5, -h/2);
         ctx.lineTo(15, -h/2 + yTop);
         ctx.lineTo(25, -h/2);
         ctx.stroke();
     }
 
-    // --- LAYER 5: EYE ---
-    ctx.shadowBlur = 0; // Ensure clean eye rendering
+    // Eye
+    ctx.shadowBlur = 0;
     ctx.fillStyle = skin.eyeColor;
     ctx.fillRect(8, -12, 8, 8);
 
-    // --- LAYER 6: UNIQUE DETAILS ---
-    switch (skinId) {
-        case 3: // INFERNO - Angry Brow
-             ctx.strokeStyle = "#000"; // Dark angry brow
-             ctx.lineWidth = 2;
-             ctx.beginPath();
-             ctx.moveTo(6, -16);
-             ctx.lineTo(18, -10);
-             ctx.stroke();
-             break;
-
-        case 4: // MIDAS - Crown
-             ctx.strokeStyle = "#FFD700";
-             ctx.lineWidth = 2;
-             ctx.beginPath();
-             // Crown overlay
-             ctx.moveTo(-10, -h/2);
-             ctx.lineTo(-15, -h/2 - 15);
-             ctx.lineTo(-5, -h/2 - 5);
-             ctx.lineTo(0, -h/2 - 20); // Center peak
-             ctx.lineTo(5, -h/2 - 5);
-             ctx.lineTo(15, -h/2 - 15);
-             ctx.lineTo(10, -h/2);
-             ctx.stroke();
-             break;
-        
-        default:
-             break;
+    // Special details
+    if (skinId === 3) {
+         ctx.strokeStyle = "#000";
+         ctx.lineWidth = 2;
+         ctx.beginPath();
+         ctx.moveTo(6, -16);
+         ctx.lineTo(18, -10);
+         ctx.stroke();
+    } else if (skinId === 4) {
+         ctx.strokeStyle = "#FFD700";
+         ctx.lineWidth = 2;
+         ctx.beginPath();
+         ctx.moveTo(-10, -h/2);
+         ctx.lineTo(-15, -h/2 - 15);
+         ctx.lineTo(-5, -h/2 - 5);
+         ctx.lineTo(0, -h/2 - 20);
+         ctx.lineTo(5, -h/2 - 5);
+         ctx.lineTo(15, -h/2 - 15);
+         ctx.lineTo(10, -h/2);
+         ctx.stroke();
     }
     
     ctx.shadowBlur = 0;
 }
-
-/* --- СУЩНОСТИ --- */
 
 class Cat {
     constructor(game) {
@@ -1879,8 +1956,7 @@ class Cat {
         this.rotation = -20; 
         
         this.game.sound.playJump();
-        for(let i=0; i<5; i++) {
-            // --- OPTIMIZATION: USE POOL ---
+        for(let i = 0; i < 3; i++) {
             this.game.spawnParticle(this.x, this.y + this.h/2);
         }
     }
@@ -1901,8 +1977,7 @@ class Cat {
         }
 
         this.timer += dt;
-        if (this.timer > 0.05) { 
-            // --- OPTIMIZATION: USE POOL ---
+        if (this.timer > 0.08) { 
             this.game.spawnParticle(this.x, this.y + this.h/2 + 5);
             this.timer = 0;
         }
@@ -1910,13 +1985,9 @@ class Cat {
 
     draw(ctx) {
         ctx.save();
-        // --- OPTIMIZATION: ROUND COORDS ---
         ctx.translate(~~(this.x + this.w/2), ~~(this.y + this.h/2));
         ctx.rotate(this.rotation * Math.PI / 180);
-
-        // Call helper to draw the correct skin
         drawCatVisuals(ctx, this.w, this.h, this.skin.id, this.velocity);
-
         ctx.restore();
     }
 }
@@ -1929,17 +2000,13 @@ class Obstacle {
         this.passed = false;
         
         const minHeight = 150;
-        // USE DYNAMIC HEIGHT
         const maxTop = game.canvas.height - CONFIG.gapSize - minHeight;
         
-        // --- LOGIC FIX: IMPOSSIBLE JUMPS ---
         let minSafe = minHeight;
         let maxSafe = maxTop;
 
         if (lastObstacle) {
-            // Max height change allowed based on physics approximation
             const maxDelta = 400; 
-            
             minSafe = Math.max(minHeight, lastObstacle.topHeight - maxDelta);
             maxSafe = Math.min(maxTop, lastObstacle.topHeight + maxDelta);
         }
@@ -1953,46 +2020,39 @@ class Obstacle {
     }
     
     draw(ctx) {
-        // --- OPTIMIZATION: NO BLUR, FAKE GLOW, ROUND COORDS ---
         const x = ~~this.x;
         const w = ~~this.w;
         const th = ~~this.topHeight;
         const by = ~~this.bottomY;
         const gh = ~~(this.game.canvas.height - this.bottomY);
 
-        // Fake Glow (Double Stroke)
-        ctx.lineWidth = 20;
-        ctx.strokeStyle = "rgba(0, 255, 0, 0.3)";
+        // Simplified glow
+        ctx.lineWidth = 15;
+        ctx.strokeStyle = "rgba(0, 255, 0, 0.25)";
         
-        // Top Pipe Glow
         ctx.beginPath();
         ctx.rect(x, -5, w, th + 5);
         ctx.stroke();
 
-        // Bottom Pipe Glow
         ctx.beginPath();
         ctx.rect(x, by, w, gh + 5);
         ctx.stroke();
 
-        // Main Body
+        // Main body
         ctx.fillStyle = "#001a00";
         ctx.strokeStyle = "#0f0";
         ctx.lineWidth = 4;
         
-        // Top Pipe
         ctx.fillRect(x, 0, w, th);
         ctx.strokeRect(x, -5, w, th + 5);
         
-        // Top Pipe Cap
         ctx.fillStyle = "#0f0";
         ctx.fillRect(x + 10, th - 40, w - 20, 10);
         
-        // Bottom Pipe
         ctx.fillStyle = "#001a00";
         ctx.fillRect(x, by, w, gh);
         ctx.strokeRect(x, by, w, gh + 5);
         
-        // Bottom Pipe Cap
         ctx.fillStyle = "#0f0";
         ctx.fillRect(x + 10, by + 30, w - 20, 10);
     }
@@ -2006,75 +2066,31 @@ class Particle {
     activate(x, y, skinId) {
         this.x = x;
         this.y = y;
-        this.skinId = skinId;
         this.life = 1.0;
-        this.size = Math.random() * 8 + 4;
+        this.size = Math.random() * 6 + 3;
         
-        // Default physics
-        this.vx = (Math.random() - 0.5) * 300 - 300; 
-        this.vy = (Math.random() - 0.5) * 300;
-        this.decay = 2.5;
+        this.vx = (Math.random() - 0.5) * 200 - 200; 
+        this.vy = (Math.random() - 0.5) * 200;
+        this.decay = 3.0;
 
-        // Customization based on Skin
-        switch (skinId) {
-            case 1: // PLASMA
-                this.color = Math.random() > 0.5 ? "#ff00ff" : "#ffccff";
-                this.shape = 'square';
-                break;
-            case 2: // PHANTOM
-                this.color = Math.random() > 0.5 ? "#00ffff" : "#e0ffff";
-                this.shape = 'rect';
-                break;
-            case 3: // INFERNO
-                this.color = Math.random() > 0.5 ? "#FF4500" : "#FFFF00";
-                this.shape = 'rect';
-                this.size = Math.random() * 6 + 2; 
-                this.decay = 3.0; 
-                break;
-            case 4: // MIDAS
-                this.color = Math.random() > 0.5 ? "#ffd700" : "#ffffff";
-                this.shape = 'circle';
-                this.decay = 2.0;
-                break;
-            case 0: 
-            default:
-                this.color = Math.random() > 0.5 ? "#00ffff" : "#0099ff";
-                this.shape = 'rect'; 
-                break;
-        }
+        const skin = SKINS[skinId];
+        this.color = skin.flame;
         
         this.active = true;
     }
     
     update(dt) {
-        if (!this.active) return;
         this.x += this.vx * dt;
         this.y += this.vy * dt;
         this.life -= this.decay * dt; 
-        this.size *= (1 - 2 * dt);
-        if (this.life <= 0) this.active = false;
+        this.size *= (1 - 2.5 * dt);
+        if (this.life <= 0 || this.size < 1) this.active = false;
     }
     
     draw(ctx) {
-        if (!this.active) return;
         ctx.globalAlpha = Math.max(0, this.life);
         ctx.fillStyle = this.color;
-        ctx.beginPath();
-        
-        const s = ~~this.size;
-        const x = ~~this.x;
-        const y = ~~this.y;
-
-        if (this.shape === 'circle') {
-            ctx.arc(x, y, s/2, 0, Math.PI * 2);
-            ctx.fill();
-        } else if (this.shape === 'square') {
-            ctx.fillRect(x, y, s, s);
-        } else {
-            ctx.rect(x, y, s, s);
-            ctx.fill();
-        }
-        
+        ctx.fillRect(~~this.x, ~~this.y, ~~this.size, ~~this.size);
         ctx.globalAlpha = 1.0;
     }
 }
@@ -2084,11 +2100,11 @@ class Background {
         this.game = game;
         this.bgX = 0;
         this.buildings = [];
-        for(let i=0; i<20; i++) {
+        for(let i = 0; i < 15; i++) {
             this.buildings.push({
-                x: i * 80,
+                x: i * 100,
                 w: 60 + Math.random() * 40,
-                h: 200 + Math.random() * 600,
+                h: 200 + Math.random() * 500,
                 color: `rgba(20, 0, 50, ${0.3 + Math.random() * 0.4})`
             });
         }
@@ -2096,20 +2112,21 @@ class Background {
     
     update(dt) {
         if (this.game.state === STATE.PLAYING) {
-            this.bgX -= (CONFIG.speed * 0.1) * dt; 
+            this.bgX -= (CONFIG.speed * 0.08) * dt; 
             if (this.bgX <= -CONFIG.logicalWidth) this.bgX = 0;
         }
     }
     
     draw(ctx) {
-        ctx.strokeStyle = "rgba(100, 0, 255, 0.1)";
-        ctx.lineWidth = 2;
-        const gridSize = 80;
+        // Simplified grid
+        ctx.strokeStyle = "rgba(100, 0, 255, 0.08)";
+        ctx.lineWidth = 1;
+        const gridSize = 100;
         const offset = ~~this.bgX % gridSize;
+        
         for (let x = offset; x < CONFIG.logicalWidth; x += gridSize) {
             ctx.beginPath();
             ctx.moveTo(~~x, 0);
-            // Use game canvas height
             ctx.lineTo(~~x, this.game.canvas.height);
             ctx.stroke();
         }
@@ -2119,19 +2136,17 @@ class Background {
             ctx.lineTo(CONFIG.logicalWidth, ~~y);
             ctx.stroke();
         }
+        
+        // Buildings
         ctx.save();
         ctx.translate(~~this.bgX, 0);
-        for(let j=0; j<2; j++) {
-            const shift = j * 1600;
-            this.buildings.forEach(b => {
+        for(let j = 0; j < 2; j++) {
+            const shift = j * 1500;
+            for (let i = 0; i < this.buildings.length; i++) {
+                const b = this.buildings[i];
                 ctx.fillStyle = b.color;
-                // Use game canvas height
                 ctx.fillRect(~~(b.x + shift), ~~(this.game.canvas.height - b.h), ~~b.w, ~~b.h);
-                ctx.fillStyle = "rgba(0, 255, 255, 0.2)";
-                for(let wy = this.game.canvas.height - b.h + 20; wy < this.game.canvas.height; wy += 40) {
-                      if(Math.random() > 0.3) ctx.fillRect(~~(b.x + shift + 10), ~~wy, ~~(b.w - 20), 20);
-                }
-            });
+            }
         }
         ctx.restore();
     }
@@ -2147,15 +2162,12 @@ function initYandex() {
         console.log('Yandex SDK Initialized');
         ysdk = ysdk_instance;
         
-        // Device check
         if (ysdk.deviceInfo.type === 'mobile' || ysdk.deviceInfo.type === 'tablet') {
             document.body.classList.add('mobile-device');
         }
         
-        // Report ready state
         ysdk.features.LoadingAPI.ready();
 
-        // Update language based on SDK environment
         if (gameInstance && gameInstance.langManager) {
             gameInstance.langManager.init();
             gameInstance.langManager.updateButtons();
@@ -2167,7 +2179,6 @@ window.onload = () => {
     gameInstance = new Game();
     initYandex();
 };
-
 </script>
 </body>
 </html>
